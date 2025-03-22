@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	fmt.Println(api.Drive())
-	fmt.Println(app.StartServer())
+	fmt.Println(api.StartServer())
+	fmt.Println(app.Drive())
 	fmt.Println(repository.OpenSheets())
 }

@@ -1,4 +1,4 @@
-package api
+package app
 
 func Drive() string {
 	return "drive"
