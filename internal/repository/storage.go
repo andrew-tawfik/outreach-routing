@@ -5,19 +5,25 @@ import (
 	"fmt"
 	"log"
 	"os"
-
 	"strings"
 
 	"golang.org/x/oauth2/google"
 	"gopkg.in/Iwark/spreadsheet.v2"
 )
 
-func main() {
+type Database struct {
+	sheet spreadsheet.Spreadsheet
+}
 
-	data, err := os.ReadFile("client_secret.json")
+func NewSheetClient(spreadsheetID string) (*Database, error) {
+
+	path := os.Getenv("GOOGLE_CREDENTIALS_PATH")
+
+	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalln("cannot read client_secret json file")
 	}
+
 	conf, err := google.JWTConfigFromJSON(data, spreadsheet.Scope)
 	if err != nil {
 		log.Fatalln("cannot config from json")
@@ -25,19 +31,14 @@ func main() {
 	client := conf.Client(context.Background())
 	service := spreadsheet.NewServiceWithClient(client)
 
-	spreadsheetID := "1o90DgjjbtkFoNFkIeGyIaDpHUzlmbS0JaUbs8eTXrxA"
 	sheet, err := service.FetchSpreadsheet(spreadsheetID)
 
 	if err != nil {
 		log.Fatalf("Failed to fetch spreadsheet: %v", err)
 	}
 
-	for _, row := range sheet.Sheets[0].Rows {
-		for _, cell := range row {
-			fmt.Printf("%s\t", cell.Value)
-		}
-		fmt.Println()
-	}
+	fmt.Println("Connection to database established ")
+	return &Database{sheet: sheet}, nil
 }
 
 func ExtractIDFromURL(url string) (string, error) {
@@ -58,4 +59,10 @@ func ExtractIDFromURL(url string) (string, error) {
 
 	// Extract and return the ID substring
 	return url[start : start+end], nil
+}
+
+func (db Database) GetGuestAddresses() (addresses []string, err error) {
+	//db.Sheet.
+
+	return addresses, err
 }
