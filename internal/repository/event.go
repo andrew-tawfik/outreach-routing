@@ -28,15 +28,15 @@ func (db *Database) ProcessEvent() (*Event, error) {
 		log.Fatalf("Column title verification failed: %v", err)
 	}
 
-	guests := make([]Guest, 10)
+	guests := make([]Guest, 0, 30)
 
-	/*
-		TODO
-			Go row by row, create guests, append to slice
-	*/
-
+	for i := 1; i < len(db.sheet.Sheets[0].Rows); i++ {
+		g, ok := processGuest(&db.sheet.Sheets[0].Rows[i])
+		if ok {
+			guests = append(guests, g)
+		}
+	}
 	return &Event{Guests: guests, EventType: et}, nil
-
 }
 
 func determineEventType(sheet *spreadsheet.Sheet) (string, error) {
@@ -47,7 +47,7 @@ func determineEventType(sheet *spreadsheet.Sheet) (string, error) {
 	} else if strings.Contains(title, "Grocery") {
 		return "Grocery", nil
 	} else {
-		return "", fmt.Errorf("Title must include either 'Dinner' or 'Grocery'")
+		return "", fmt.Errorf("title must include either 'Dinner' or 'Grocery'")
 	}
 }
 

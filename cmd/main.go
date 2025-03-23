@@ -32,13 +32,17 @@ func main() {
 		log.Fatalf("could not initialize sheet client: %v", err)
 	}
 
-	db.ProcessEvent()
+	event, err := db.ProcessEvent()
+	if err != nil {
+		log.Fatalf("Could not process event: %v", err)
+	}
 
-	// addresses, err := db.GetGuestAddresses()
+	guests := event.Guests
 
-	// for _, a := range addresses {
-	// 	fmt.Println(a)
-	// }
+	// Print Array of Guests
+	for i, g := range guests {
+		fmt.Println(i, ". ", g)
+	}
 
 	// Feed Sheets url
 

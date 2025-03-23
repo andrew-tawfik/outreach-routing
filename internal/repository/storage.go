@@ -60,9 +60,3 @@ func ExtractIDFromURL(url string) (string, error) {
 	// Extract and return the ID substring
 	return url[start : start+end], nil
 }
-
-func (db Database) GetGuestAddresses() (addresses []string, err error) {
-	//db.Sheet.
-
-	return addresses, err
-}
