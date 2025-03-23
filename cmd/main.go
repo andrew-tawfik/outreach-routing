@@ -4,16 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/andrew-tawfik/outreach-routing/internal/app"
-	"github.com/andrew-tawfik/outreach-routing/internal/http"
 	"github.com/andrew-tawfik/outreach-routing/internal/repository"
 )
 
 func main() {
-
-	fmt.Println(http.StartServer())
-	fmt.Println(app.Drive())
-
 	// Step 1. Open repository and initialize program
 	//Retreive guests names and addresses who will require a service
 	fmt.Println("Please provide Google SheetURL")
@@ -37,14 +31,12 @@ func main() {
 		log.Fatalf("Could not process event: %v", err)
 	}
 
-	guests := event.Guests
+	httpEvent := mapRepoEventToHttp(event)
 
 	// Print Array of Guests
-	for i, g := range guests {
-		fmt.Println(i, ". ", g)
+	for i, g := range httpEvent.Guests {
+		fmt.Println(i, g)
 	}
-
-	// Feed Sheets url
 
 	// Step 2. Fetch addresses exact coordinates that will be utilized
 
