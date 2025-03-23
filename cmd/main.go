@@ -13,7 +13,6 @@ func main() {
 
 	fmt.Println(http.StartServer())
 	fmt.Println(app.Drive())
-	//fmt.Println(repository.OpenSheets())
 
 	// Step 1. Open repository and initialize program
 	//Retreive guests names and addresses who will require a service
@@ -22,12 +21,24 @@ func main() {
 	var googleSheetURL string
 	fmt.Scanln(&googleSheetURL)
 
-	RepositoryId, err := repository.ExtractIDFromURL(googleSheetURL)
+	spreadsheetID, err := repository.ExtractIDFromURL(googleSheetURL)
 
 	if err != nil {
 		log.Fatalf("error extracting ID: %v", err)
 	}
-	fmt.Println(RepositoryId)
+
+	db, err := repository.NewSheetClient(spreadsheetID)
+	if err != nil {
+		log.Fatalf("could not initialize sheet client: %v", err)
+	}
+
+	db.ProcessEvent()
+
+	// addresses, err := db.GetGuestAddresses()
+
+	// for _, a := range addresses {
+	// 	fmt.Println(a)
+	// }
 
 	// Feed Sheets url
 
