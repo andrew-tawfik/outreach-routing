@@ -1,24 +1,24 @@
 package main
 
 import (
-	"github.com/andrew-tawfik/outreach-routing/internal/http"
-	"github.com/andrew-tawfik/outreach-routing/internal/repository"
+	"github.com/andrew-tawfik/outreach-routing/internal/database"
+	"github.com/andrew-tawfik/outreach-routing/internal/geoapi"
 )
 
-func mapRepoEventToHttp(repoEvent *repository.Event) *http.Event {
-	numGuests := len((*repoEvent).Guests)
-	httpGuests := make([]http.Guest, 0, numGuests)
+func mapDatabaseEventToHttp(dbEvent *database.Event) *geoapi.Event {
+	numGuests := len((*dbEvent).Guests)
+	httpGuests := make([]geoapi.Guest, 0, numGuests)
 
-	for _, g := range (*repoEvent).Guests {
-		convertedGuest := http.Guest{
-			Status:  http.GuestStatus(g.Status),
+	for _, g := range (*dbEvent).Guests {
+		convertedGuest := geoapi.Guest{
+			Status:  geoapi.GuestStatus(g.Status),
 			Name:    g.Name,
 			Address: g.Address,
 		}
 		httpGuests = append(httpGuests, convertedGuest)
 	}
-	return &http.Event{
+	return &geoapi.Event{
 		Guests:    httpGuests,
-		EventType: repoEvent.EventType,
+		EventType: dbEvent.EventType,
 	}
 }

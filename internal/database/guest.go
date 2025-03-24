@@ -1,4 +1,4 @@
-package repository
+package database
 
 import "gopkg.in/Iwark/spreadsheet.v2"
 
