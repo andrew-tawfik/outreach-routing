@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -23,7 +22,7 @@ func (g *Guest) GeocodeAddress() error {
 	polishAddress(&address)
 	url := fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=geojson", address)
 
-	client := &http.Client{Timeout: 20 * time.Second}
+	client := &http.Client{Timeout: 60 * time.Second}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -34,16 +33,20 @@ func (g *Guest) GeocodeAddress() error {
 	resp, err := client.Do(req)
 
 	if err != nil {
+		fmt.Printf("HTTP request failed for %s: %v\n", url, err)
 		return err
 	}
 	defer resp.Body.Close()
 
+	//Error here
 	if resp.StatusCode != http.StatusOK {
+		fmt.Println("error code")
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		fmt.Println("cannot read")
 		return err
 	}
 
@@ -53,12 +56,14 @@ func (g *Guest) GeocodeAddress() error {
 
 	// unmashall the response body into a Features struct
 	if err := json.Unmarshal(body, &nr); err != nil {
-		log.Fatalf("could not deserialize response body")
+		fmt.Println("Cannot unmarshall")
+		return fmt.Errorf("could not deserialize response body: %v", err)
 	}
 	city := "Ottawa"
 	// Search within the the struct to extract for Ottawa address Coordinates
 	coordinates, err := nr.locateCoordinatesByKeyword(city)
 	if err != nil {
+		fmt.Println("cannot locate")
 		return fmt.Errorf("could not extract coordinates: %v", err)
 	}
 	fmt.Println(coordinates)
