@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/database"
-	"github.com/andrew-tawfik/outreach-routing/internal/geoapi"
 )
 
 func main() {
@@ -33,16 +32,14 @@ func main() {
 		log.Fatalf("Could not process event: %v", err)
 	}
 
-	httpEvent := mapDatabaseEventToHttp(event)
-	httpEvent.FilterGuestForService()
+	geoEvent := mapDatabaseEventToHttp(event)
+	geoEvent.FilterGuestForService()
+	geoEvent.RequestGuestCoordiantes()
 
 	// Print Array of Guests
-	for i, g := range httpEvent.Guests {
+	for i, g := range geoEvent.Guests {
 		fmt.Println(i, g)
 	}
-
-	address := "171 George St"
-	geoapi.GeocodeAddress(address)
 
 	// Step 2. Fetch addresses exact coordinates that will be utilized
 

@@ -12,9 +12,10 @@ const (
 )
 
 type Guest struct {
-	Status  GuestStatus
-	Name    string
-	Address string
+	Status      GuestStatus
+	Name        string
+	Address     string
+	Coordinates GuestCoordinates
 }
 
 type Event struct {
@@ -31,4 +32,14 @@ func (e *Event) FilterGuestForService() {
 		}
 	}
 	e.Guests = filteredGuests
+}
+
+func (e *Event) RequestGuestCoordiantes() error {
+	for i := range e.Guests {
+		err := e.Guests[i].GeocodeAddress()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
