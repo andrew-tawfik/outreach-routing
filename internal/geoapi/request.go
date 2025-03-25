@@ -2,6 +2,7 @@ package geoapi
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -15,9 +16,9 @@ type Coordinates struct {
 // Two General Items to request
 
 // First we need the coordinates of each address
-func geocodeAddress(address string) (Coordinates, error) {
+func GeocodeAddress(address string) (Coordinates, error) {
 	polishAddress(&address)
-	url := fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=json", address)
+	url := fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=geojson", address)
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
@@ -37,6 +38,13 @@ func geocodeAddress(address string) (Coordinates, error) {
 	if resp.StatusCode != http.StatusOK {
 		return Coordinates{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return Coordinates{}, err
+	}
+	fmt.Println("Response from nominatim", string(body))
+
 	return Coordinates{}, nil
 }
 
