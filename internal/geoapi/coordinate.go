@@ -14,6 +14,7 @@ type GuestCoordinates struct {
 	Lat  float64
 }
 
+// Global Client variable to handle requests
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 // Two General Items to request
@@ -62,7 +63,6 @@ func fetchGeocodeData(url string) ([]byte, error) {
 		}
 
 		if resp.StatusCode == http.StatusServiceUnavailable {
-			fmt.Println("Server busy, retrying...")
 			time.Sleep(2 * time.Second)
 			continue
 		}
