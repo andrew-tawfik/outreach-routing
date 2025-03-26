@@ -21,8 +21,9 @@ type Guest struct {
 }
 
 type Event struct {
-	Guests    []Guest
-	EventType string
+	Guests            []Guest
+	EventType         string
+	CoordinatesString string
 }
 
 // Filter for only Confirmed or GroceryOnly
@@ -38,11 +39,18 @@ func (e *Event) FilterGuestForService() {
 
 func (e *Event) RequestGuestCoordiantes() error {
 	for i := range e.Guests {
-		err := e.Guests[i].GeocodeAddress()
+		err := e.Guests[i].geocodeAddress()
+		e.AddToCoordinatesList(i)
 		if err != nil {
 			return err
 		}
 	}
 	fmt.Println("Retrived all coordinates successfully")
 	return nil
+}
+
+func (e *Event) AddToCoordinatesList(guestIndex int) {
+	g := e.Guests[guestIndex]
+	str := fmt.Sprintf("%f,%f;", g.Coordinates.Long, g.Coordinates.Lat)
+	e.CoordinatesString += str
 }

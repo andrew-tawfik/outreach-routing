@@ -41,6 +41,8 @@ func main() {
 		fmt.Println(i, g)
 	}
 
+	fmt.Println("Coordinate list:", geoEvent.CoordinatesString)
+
 	// Step 2. Fetch addresses exact coordinates that will be utilized
 
 	// Step 3. Fetch distance matrix
