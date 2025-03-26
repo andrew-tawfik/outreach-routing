@@ -27,6 +27,8 @@ type Event struct {
 	CoordinatesString string
 }
 
+var eventCoordinateSet = make(map[GuestCoordinates]bool)
+
 // Filter for only Confirmed or GroceryOnly
 func (e *Event) FilterGuestForService() {
 	filteredGuests := make([]Guest, 0)
@@ -41,17 +43,29 @@ func (e *Event) FilterGuestForService() {
 func (e *Event) RequestGuestCoordiantes() error {
 	for i := range e.Guests {
 		err := e.Guests[i].geocodeAddress()
-		e.AddToUniqueCoordinatesList(i)
 		if err != nil {
 			return err
 		}
+		coor, unique := e.isUnique(i)
+		if unique {
+			e.AddToSet(&coor)
+		}
+
 	}
 	fmt.Println("Retrived all coordinates successfully")
 	return nil
 }
 
-func (e *Event) AddToUniqueCoordinatesList(guestIndex int) {
+func (e *Event) AddToSet(uniqueCoordinate *string) {
+	e.CoordinatesString += *uniqueCoordinate
+}
+
+func (e *Event) isUnique(guestIndex int) (string, bool) {
 	g := e.Guests[guestIndex]
-	str := fmt.Sprintf("%f,%f;", g.Coordinates.Long, g.Coordinates.Lat)
-	e.CoordinatesString += str
+	if eventCoordinateSet[g.Coordinates] {
+		return "", false
+	} else {
+		eventCoordinateSet[g.Coordinates] = true
+		return fmt.Sprintf("%f,%f;", g.Coordinates.Long, g.Coordinates.Lat), true
+	}
 }
