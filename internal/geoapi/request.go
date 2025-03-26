@@ -22,7 +22,7 @@ func (g *Guest) GeocodeAddress() error {
 	polishAddress(&address)
 	url := fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=geojson", address)
 
-	client := &http.Client{Timeout: 60 * time.Second}
+	client := &http.Client{Timeout: 10 * time.Second}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -38,7 +38,16 @@ func (g *Guest) GeocodeAddress() error {
 	}
 	defer resp.Body.Close()
 
-	//Error here
+	for resp.StatusCode == http.StatusServiceUnavailable {
+		fmt.Println("Server busy, retrying!")
+		time.Sleep(2 * time.Second)
+		resp, err = client.Do(req)
+		if err != nil {
+			fmt.Printf("HTTP request failed for %s: %v\n", url, err)
+			return err
+		}
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println("error code")
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -66,7 +75,6 @@ func (g *Guest) GeocodeAddress() error {
 		fmt.Println("cannot locate")
 		return fmt.Errorf("could not extract coordinates: %v", err)
 	}
-	fmt.Println(coordinates)
 	g.Coordinates = GuestCoordinates{Long: coordinates[0], Lat: coordinates[1]}
 
 	// if found update GuestCoordinates

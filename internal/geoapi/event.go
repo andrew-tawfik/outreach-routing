@@ -1,5 +1,7 @@
 package geoapi
 
+import "fmt"
+
 type GuestStatus int
 
 const (
@@ -41,5 +43,6 @@ func (e *Event) RequestGuestCoordiantes() error {
 			return err
 		}
 	}
+	fmt.Println("Retrived all coordinates successfully")
 	return nil
 }
