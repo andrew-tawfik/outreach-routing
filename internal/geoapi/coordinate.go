@@ -62,7 +62,6 @@ func fetchGeocodeData(url string) ([]byte, error) {
 		}
 
 		if resp.StatusCode == http.StatusServiceUnavailable {
-			fmt.Println("Server busy, retrying...")
 			time.Sleep(2 * time.Second)
 			continue
 		}

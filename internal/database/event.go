@@ -52,7 +52,7 @@ func determineEventType(sheet *spreadsheet.Sheet) (string, error) {
 }
 
 func verifyColumnTitles(row *[]spreadsheet.Cell) error {
-	correctOrder := []string{"Status", "Name", "Number", "Address"}
+	correctOrder := []string{"Status", "Name", "Group Size", "Number", "Address"}
 
 	if len(*row) < len(correctOrder) {
 		return fmt.Errorf("row too short: expected at least %d columns, got %d", len(correctOrder), len(*row))

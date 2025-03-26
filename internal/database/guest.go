@@ -1,6 +1,10 @@
 package database
 
-import "gopkg.in/Iwark/spreadsheet.v2"
+import (
+	"strconv"
+
+	"gopkg.in/Iwark/spreadsheet.v2"
+)
 
 type GuestStatus int
 
@@ -16,6 +20,7 @@ const (
 type Guest struct {
 	Status      GuestStatus
 	Name        string
+	GroupSize   int
 	PhoneNumber string
 	Address     string
 }
@@ -23,16 +28,26 @@ type Guest struct {
 func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 	status := determineGuestStatus((*row)[0].Value)
 	name := (*row)[1].Value
-	phone := (*row)[2].Value
-	address := (*row)[3].Value
+	count := (*row)[2].Value
+	phone := (*row)[3].Value
+	address := (*row)[4].Value
 	validGuest := true
+
+	iCount, err := strconv.Atoi(count)
+	if err != nil || iCount <= 0 { // Ensure iCount > 0
+		validGuest = false
+	}
 
 	if name == "" || address == "" {
 		validGuest = false
 	}
 
-	return Guest{Status: status, Name: name,
-		PhoneNumber: phone, Address: address,
+	return Guest{
+		Status:      status,
+		Name:        name,
+		GroupSize:   iCount,
+		PhoneNumber: phone,
+		Address:     address,
 	}, validGuest
 }
 

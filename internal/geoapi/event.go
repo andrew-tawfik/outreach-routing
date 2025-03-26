@@ -16,6 +16,7 @@ const (
 type Guest struct {
 	Status      GuestStatus
 	Name        string
+	GroupSize   int
 	Address     string
 	Coordinates GuestCoordinates
 }
@@ -40,7 +41,7 @@ func (e *Event) FilterGuestForService() {
 func (e *Event) RequestGuestCoordiantes() error {
 	for i := range e.Guests {
 		err := e.Guests[i].geocodeAddress()
-		e.AddToCoordinatesList(i)
+		e.AddToUniqueCoordinatesList(i)
 		if err != nil {
 			return err
 		}
@@ -49,7 +50,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 	return nil
 }
 
-func (e *Event) AddToCoordinatesList(guestIndex int) {
+func (e *Event) AddToUniqueCoordinatesList(guestIndex int) {
 	g := e.Guests[guestIndex]
 	str := fmt.Sprintf("%f,%f;", g.Coordinates.Long, g.Coordinates.Lat)
 	e.CoordinatesString += str
