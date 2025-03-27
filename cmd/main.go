@@ -41,7 +41,9 @@ func main() {
 		fmt.Println(i, g)
 	}
 
-	fmt.Println("Coordinate list:", geoEvent.CoordinatesString)
+	fmt.Println("Coordinate list:", geoEvent.GuestLocations.CoordListString)
+	fmt.Println("String size: ", len(geoEvent.GuestLocations.CoordListString))
+	fmt.Println(geoEvent.GuestLocations.GuestCountByCoord)
 
 	// Step 2. Fetch addresses exact coordinates that will be utilized
 

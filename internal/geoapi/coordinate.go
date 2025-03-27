@@ -16,23 +16,13 @@ type GuestCoordinates struct {
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
-// Two General Items to request
+func (g *Guest) geocodeGuestAddress() error {
 
-// First we need the coordinates of each address
-func (g *Guest) geocodeAddress() error {
-	url := buildGeocodeURL(g.Address)
-
-	body, err := fetchGeocodeData(url)
+	gc, err := retreiveAddress(g.Address)
 	if err != nil {
 		return err
 	}
-
-	coordinates, err := parseGeocodeResponse(body, "Ottawa")
-	if err != nil {
-		return err
-	}
-
-	g.Coordinates = GuestCoordinates{Long: coordinates[0], Lat: coordinates[1]}
+	g.Coordinates = gc
 	return nil
 }
 
@@ -106,4 +96,19 @@ func polishAddress(rawAddress *string) {
 	address = strings.ReplaceAll(address, " ", "+")
 
 	*rawAddress = address
+}
+
+func retreiveAddress(address string) (GuestCoordinates, error) {
+	url := buildGeocodeURL(address)
+
+	body, err := fetchGeocodeData(url)
+	if err != nil {
+		return GuestCoordinates{}, err
+	}
+
+	coordinates, err := parseGeocodeResponse(body, "Ottawa")
+	if err != nil {
+		return GuestCoordinates{}, err
+	}
+	return GuestCoordinates{coordinates[0], coordinates[1]}, nil
 }

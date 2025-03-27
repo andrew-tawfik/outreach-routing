@@ -22,12 +22,10 @@ type Guest struct {
 }
 
 type Event struct {
-	Guests            []Guest
-	EventType         string
-	CoordinatesString string
+	Guests         []Guest
+	EventType      string
+	GuestLocations LocationRegistry
 }
-
-var eventCoordinateSet = make(map[GuestCoordinates]bool)
 
 // Filter for only Confirmed or GroceryOnly
 func (e *Event) FilterGuestForService() {
@@ -41,14 +39,26 @@ func (e *Event) FilterGuestForService() {
 }
 
 func (e *Event) RequestGuestCoordiantes() error {
+	if e.GuestLocations.GuestCountByCoord == nil {
+		e.GuestLocations.GuestCountByCoord = make(map[GuestCoordinates]int)
+	}
+
+	depotCoor, err := retreiveAddress("555 Parkdale Ave")
+	if err != nil {
+		return err
+	}
+
+	depotCoorString := depotCoor.toString()
+	e.AddToCoordListString(&depotCoorString)
+
 	for i := range e.Guests {
-		err := e.Guests[i].geocodeAddress()
+		err := e.Guests[i].geocodeGuestAddress()
 		if err != nil {
 			return err
 		}
 		coor, unique := e.isUnique(i)
 		if unique {
-			e.AddToSet(&coor)
+			e.AddToCoordListString(&coor)
 		}
 
 	}
@@ -56,16 +66,26 @@ func (e *Event) RequestGuestCoordiantes() error {
 	return nil
 }
 
-func (e *Event) AddToSet(uniqueCoordinate *string) {
-	e.CoordinatesString += *uniqueCoordinate
+func (e *Event) AddToCoordListString(uniqueCoordinate *string) {
+	e.GuestLocations.CoordListString += *uniqueCoordinate
 }
 
 func (e *Event) isUnique(guestIndex int) (string, bool) {
 	g := e.Guests[guestIndex]
-	if eventCoordinateSet[g.Coordinates] {
+	val, ok := e.GuestLocations.GuestCountByCoord[g.Coordinates]
+
+	if ok {
+		// Already exists, update and return false
+		e.GuestLocations.GuestCountByCoord[g.Coordinates] = val + g.GroupSize
 		return "", false
-	} else {
-		eventCoordinateSet[g.Coordinates] = true
-		return fmt.Sprintf("%f,%f;", g.Coordinates.Long, g.Coordinates.Lat), true
 	}
+
+	// First time seeing this coordinate
+	e.GuestLocations.GuestCountByCoord[g.Coordinates] = g.GroupSize
+	return g.Coordinates.toString(), true
+}
+
+func (gc *GuestCoordinates) toString() string {
+	return fmt.Sprintf("%f,%f;", gc.Long, gc.Lat)
+
 }
