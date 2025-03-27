@@ -43,7 +43,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 		e.GuestLocations.GuestCountByCoord = make(map[GuestCoordinates]int)
 	}
 
-	depotCoor, err := retreiveAddress("555 Parkdale Ave")
+	depotCoor, err := retreiveAddressCoordinate("555 Parkdale Ave")
 	if err != nil {
 		return err
 	}
