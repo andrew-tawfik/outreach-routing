@@ -17,23 +17,28 @@ type GuestCoordinates struct {
 // Global Client variable to handle requests
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
-// Two General Items to request
-
-// First we need the coordinates of each address
-func (g *Guest) geocodeAddress() error {
-	url := buildGeocodeURL(g.Address)
+func retreiveAddressCoordinate(address string) (GuestCoordinates, error) {
+	url := buildGeocodeURL(address)
 
 	body, err := fetchGeocodeData(url)
 	if err != nil {
-		return err
+		return GuestCoordinates{}, err
 	}
 
 	coordinates, err := parseGeocodeResponse(body, "Ottawa")
 	if err != nil {
+		return GuestCoordinates{}, err
+	}
+	return GuestCoordinates{coordinates[0], coordinates[1]}, nil
+}
+
+func (g *Guest) geocodeGuestAddress() error {
+
+	gc, err := retreiveAddressCoordinate(g.Address)
+	if err != nil {
 		return err
 	}
-
-	g.Coordinates = GuestCoordinates{Long: coordinates[0], Lat: coordinates[1]}
+	g.Coordinates = gc
 	return nil
 }
 

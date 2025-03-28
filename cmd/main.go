@@ -36,12 +36,8 @@ func main() {
 	geoEvent.FilterGuestForService()
 	geoEvent.RequestGuestCoordiantes()
 
-	// Print Array of Guests
-	for i, g := range geoEvent.Guests {
-		fmt.Println(i, g)
-	}
-
-	fmt.Println("Coordinate list:", geoEvent.CoordinatesString)
+	geoEvent.RetreiveDistanceMatrix()
+	geoEvent.DisplayEvent()
 
 	// Step 2. Fetch addresses exact coordinates that will be utilized
 
