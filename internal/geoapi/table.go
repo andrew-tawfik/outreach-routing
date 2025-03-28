@@ -1,12 +1,5 @@
 package geoapi
 
-<<<<<<< HEAD
-// Retreive distance and time table from ORSM
-
-// I think I need find the unique coordinates (filtering out duplicates)
-
-//
-=======
 import (
 	"encoding/json"
 	"fmt"
@@ -96,4 +89,3 @@ func parseOsrmResponse(body *[]byte) ([][]float64, error) {
 	return osrm.Distances, nil
 
 }
->>>>>>> d24c1d9eac113ba7d7d68376cf7da59da66cb03f
