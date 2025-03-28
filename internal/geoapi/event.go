@@ -27,6 +27,8 @@ type Event struct {
 	GuestLocations LocationRegistry
 }
 
+var addressOrder = make([]string, 0)
+
 // Filter for only Confirmed or GroceryOnly
 func (e *Event) FilterGuestForService() {
 	filteredGuests := make([]Guest, 0)
@@ -43,10 +45,12 @@ func (e *Event) RequestGuestCoordiantes() error {
 		e.GuestLocations.GuestCountByCoord = make(map[GuestCoordinates]int)
 	}
 
-	depotCoor, err := retreiveAddressCoordinate("555 Parkdale Ave")
+	depotAddr := "555 Parkdale Ave"
+	depotCoor, err := retreiveAddressCoordinate(depotAddr)
 	if err != nil {
 		return err
 	}
+	addressOrder = append(addressOrder, depotAddr)
 
 	depotCoorString := depotCoor.toString()
 	e.AddToCoordListString(&depotCoorString)
@@ -68,6 +72,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 
 func (e *Event) AddToCoordListString(uniqueCoordinate *string) {
 	e.GuestLocations.CoordListString += *uniqueCoordinate
+
 }
 
 func (e *Event) isUnique(guestIndex int) (string, bool) {
@@ -82,10 +87,11 @@ func (e *Event) isUnique(guestIndex int) (string, bool) {
 
 	// First time seeing this coordinate
 	e.GuestLocations.GuestCountByCoord[g.Coordinates] = g.GroupSize
+
+	addressOrder = append(addressOrder, g.Address)
 	return g.Coordinates.toString(), true
 }
 
 func (gc *GuestCoordinates) toString() string {
 	return fmt.Sprintf("%f,%f;", gc.Long, gc.Lat)
-
 }

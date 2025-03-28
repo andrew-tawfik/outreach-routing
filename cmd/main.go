@@ -37,13 +37,16 @@ func main() {
 	geoEvent.RequestGuestCoordiantes()
 
 	// Print Array of Guests
-	for i, g := range geoEvent.Guests {
-		fmt.Println(i, g)
-	}
+	// for i, g := range geoEvent.Guests {
+	// 	fmt.Println(i, g)
+	// }
 
-	fmt.Println("Coordinate list:", geoEvent.GuestLocations.CoordListString)
-	fmt.Println("String size: ", len(geoEvent.GuestLocations.CoordListString))
-	fmt.Println(geoEvent.GuestLocations.GuestCountByCoord)
+	//fmt.Println("Coordinate list:", geoEvent.GuestLocations.CoordListString)
+	//fmt.Println("String size: ", len(geoEvent.GuestLocations.CoordListString))
+	//fmt.Println(geoEvent.GuestLocations.GuestCountByCoord)
+
+	geoEvent.RetreiveDistanceMatrix()
+	geoEvent.DisplayMatrix()
 
 	// Step 2. Fetch addresses exact coordinates that will be utilized
 
