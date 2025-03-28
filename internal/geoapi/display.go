@@ -1,13 +1,48 @@
 package geoapi
 
-import "fmt"
+import (
+	"fmt"
+)
 
-func (e *Event) DisplayMatrix() {
+func (e *Event) DisplayEvent() {
+	space(2)
+	e.displayMatrix()
+
+	space(3)
+	// Display people per location
+	e.displayCountPerAddress()
+
+	space(3)
+	// Display guest information
+	for _, g := range e.Guests {
+		g.displayGuestInformation()
+	}
+
+	space(3)
+	// Display event type
+	fmt.Println("Event type: ", e.EventType)
+}
+
+func (e *Event) displayCountPerAddress() {
+	total := 0
+	fmt.Println("(Coordinate): Number of People at this Address")
+	for address, count := range e.GuestLocations.GuestCountByCoord {
+		fmt.Printf("(%f, %f): %d \n", address.Long, address.Lat, count)
+		total += count
+	}
+
+	fmt.Println("Total people that require service. ", total)
+}
+
+func (g *Guest) displayGuestInformation() {
+	fmt.Printf("Guest: %s needs a ride to %s(%f, %f) \n", g.Name, g.Address, g.Coordinates.Long, g.Coordinates.Lat)
+}
+
+func (e *Event) displayMatrix() {
 
 	matrix := &e.GuestLocations.DistanceMatrix
 
-	fmt.Println()
-	fmt.Println()
+	fmt.Println("Guest Information")
 
 	// Find max name length for padding
 	maxNameLen := 0
@@ -45,4 +80,10 @@ func truncate(name string, max int) string {
 		return name
 	}
 	return name[:max-1] + "…"
+}
+
+func space(lines int) {
+	for i := 0; i < lines; i++ {
+		fmt.Println()
+	}
 }
