@@ -9,11 +9,6 @@ import (
 	"time"
 )
 
-type GuestCoordinates struct {
-	Long float64
-	Lat  float64
-}
-
 // Global Client variable to handle requests
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
