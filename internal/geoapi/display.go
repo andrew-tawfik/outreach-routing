@@ -26,7 +26,7 @@ func (e *Event) DisplayEvent() {
 func (e *Event) displayCountPerAddress() {
 	total := 0
 	fmt.Println("(Coordinate): Number of People at this Address")
-	for address, count := range e.GuestLocations.GuestCountByCoord {
+	for address, count := range e.GuestLocations.CoordianteMap.DestinationOccupancy {
 		fmt.Printf("(%f, %f): %d \n", address.Long, address.Lat, count)
 		total += count
 	}
@@ -46,7 +46,7 @@ func (e *Event) displayMatrix() {
 
 	// Find max name length for padding
 	maxNameLen := 0
-	for _, name := range addressOrder {
+	for _, name := range e.GuestLocations.CoordianteMap.AddressOrder {
 		if len(name) > maxNameLen {
 			maxNameLen = len(name)
 		}
@@ -57,7 +57,7 @@ func (e *Event) displayMatrix() {
 
 	// Print column headers
 	fmt.Printf("%-*s", maxNameLen+2, "") // empty top-left corner
-	for _, name := range addressOrder {
+	for _, name := range e.GuestLocations.CoordianteMap.AddressOrder {
 		fmt.Printf("%-*s", cellWidth, truncate(name, cellWidth-1))
 	}
 	fmt.Println()
@@ -65,7 +65,7 @@ func (e *Event) displayMatrix() {
 	// Print each row
 	for i, row := range *matrix {
 		// Row header (name)
-		fmt.Printf("%-*s", maxNameLen+2, addressOrder[i])
+		fmt.Printf("%-*s", maxNameLen+2, e.GuestLocations.CoordianteMap.AddressOrder[i])
 
 		// Row values
 		for _, val := range row {

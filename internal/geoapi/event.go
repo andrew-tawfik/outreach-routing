@@ -21,13 +21,29 @@ type Guest struct {
 	Coordinates GuestCoordinates
 }
 
+type GuestCoordinates struct {
+	Long float64
+	Lat  float64
+}
+
 type Event struct {
 	Guests         []Guest
 	EventType      string
 	GuestLocations LocationRegistry
 }
 
-var addressOrder = make([]string, 0)
+type LocationRegistry struct {
+	DistanceMatrix [][]float64
+	CoordianteMap  CoordinateMapping
+}
+
+type CoordinateMapping struct {
+	DestinationOccupancy map[GuestCoordinates]int
+	CoordinateToAddress  map[GuestCoordinates]string
+	AddressOrder         []string
+}
+
+var coordListURL string
 
 // Filter for only Confirmed or GroceryOnly
 func (e *Event) FilterGuestForService() {
@@ -41,8 +57,12 @@ func (e *Event) FilterGuestForService() {
 }
 
 func (e *Event) RequestGuestCoordiantes() error {
-	if e.GuestLocations.GuestCountByCoord == nil {
-		e.GuestLocations.GuestCountByCoord = make(map[GuestCoordinates]int)
+	if e.GuestLocations.CoordianteMap.DestinationOccupancy == nil &&
+		e.GuestLocations.CoordianteMap.CoordinateToAddress == nil {
+
+		e.GuestLocations.CoordianteMap.DestinationOccupancy = make(map[GuestCoordinates]int)
+		e.GuestLocations.CoordianteMap.CoordinateToAddress = make(map[GuestCoordinates]string)
+		e.GuestLocations.CoordianteMap.AddressOrder = make([]string, 0)
 	}
 
 	depotAddr := "555 Parkdale Ave"
@@ -50,10 +70,10 @@ func (e *Event) RequestGuestCoordiantes() error {
 	if err != nil {
 		return err
 	}
-	addressOrder = append(addressOrder, depotAddr)
+	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, depotAddr)
 
 	depotCoorString := depotCoor.toString()
-	e.AddToCoordListString(&depotCoorString)
+	addToCoordListString(&depotCoorString)
 
 	for i := range e.Guests {
 		err := e.Guests[i].geocodeGuestAddress()
@@ -62,7 +82,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 		}
 		coor, unique := e.isUnique(i)
 		if unique {
-			e.AddToCoordListString(&coor)
+			addToCoordListString(&coor)
 		}
 
 	}
@@ -70,25 +90,25 @@ func (e *Event) RequestGuestCoordiantes() error {
 	return nil
 }
 
-func (e *Event) AddToCoordListString(uniqueCoordinate *string) {
-	e.GuestLocations.CoordListString += *uniqueCoordinate
+func addToCoordListString(uniqueCoordinate *string) {
+	coordListURL += *uniqueCoordinate
 
 }
 
 func (e *Event) isUnique(guestIndex int) (string, bool) {
 	g := e.Guests[guestIndex]
-	val, ok := e.GuestLocations.GuestCountByCoord[g.Coordinates]
+	val, ok := e.GuestLocations.CoordianteMap.DestinationOccupancy[g.Coordinates]
 
 	if ok {
 		// Already exists, update and return false
-		e.GuestLocations.GuestCountByCoord[g.Coordinates] = val + g.GroupSize
+		e.GuestLocations.CoordianteMap.DestinationOccupancy[g.Coordinates] = val + g.GroupSize
 		return "", false
 	}
 
 	// First time seeing this coordinate
-	e.GuestLocations.GuestCountByCoord[g.Coordinates] = g.GroupSize
-
-	addressOrder = append(addressOrder, g.Address)
+	e.GuestLocations.CoordianteMap.DestinationOccupancy[g.Coordinates] = g.GroupSize
+	e.GuestLocations.CoordianteMap.CoordinateToAddress[g.Coordinates] = g.Address
+	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, g.Address)
 	return g.Coordinates.toString(), true
 }
 

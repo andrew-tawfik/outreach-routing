@@ -9,12 +9,6 @@ import (
 	"strings"
 )
 
-type LocationRegistry struct {
-	DistanceMatrix    [][]float64
-	GuestCountByCoord map[GuestCoordinates]int
-	CoordListString   string
-}
-
 type OSRMResponse struct {
 	Sources   []Source    `json:"sources"`
 	Distances [][]float64 `json:"distances"`
@@ -27,8 +21,8 @@ type Source struct {
 }
 
 func (e *Event) RetreiveDistanceMatrix() {
-	e.GuestLocations.CoordListString = strings.TrimSuffix(e.GuestLocations.CoordListString, ";")
-	url := buildDistanceMatrixURL(&e.GuestLocations.CoordListString)
+	coordListURL = strings.TrimSuffix(coordListURL, ";")
+	url := buildDistanceMatrixURL(&coordListURL)
 	jsonresp, err := fetchDistanceMatrix(&url)
 	if err != nil {
 		log.Fatalf("%v", err)
