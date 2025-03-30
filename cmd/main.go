@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/andrew-tawfik/outreach-routing/internal/app"
 	"github.com/andrew-tawfik/outreach-routing/internal/database"
 )
 
 func main() {
 	// Step 1. Open repository and initialize program
+
+	//app.TestMaxHeap()
 
 	//Retreive guests names and addresses who will require a service
 	fmt.Println("Please provide Google SheetURL")
@@ -42,6 +45,10 @@ func main() {
 	// Step 2. Fetch addresses exact coordinates that will be utilized
 	appEvent.Display()
 	lr.Display()
+
+	RouteManager := app.CreateRouteManager(lr, 8)
+	fmt.Println(RouteManager)
+
 	// Step 3. Fetch distance matrix
 
 	// Step 4. Determine the best route with RSP algorithm

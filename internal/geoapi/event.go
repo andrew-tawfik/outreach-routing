@@ -38,7 +38,7 @@ type LocationRegistry struct {
 
 type CoordinateMapping struct {
 	DestinationOccupancy map[coordinates.GuestCoordinates]int
-	CoordinateToAddress  map[coordinates.GuestCoordinates]string
+	CoordinateToAddress  map[string]coordinates.GuestCoordinates
 	AddressOrder         []string
 }
 
@@ -60,7 +60,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 		e.GuestLocations.CoordianteMap.CoordinateToAddress == nil {
 
 		e.GuestLocations.CoordianteMap.DestinationOccupancy = make(map[coordinates.GuestCoordinates]int)
-		e.GuestLocations.CoordianteMap.CoordinateToAddress = make(map[coordinates.GuestCoordinates]string)
+		e.GuestLocations.CoordianteMap.CoordinateToAddress = make(map[string]coordinates.GuestCoordinates)
 		e.GuestLocations.CoordianteMap.AddressOrder = make([]string, 0)
 	}
 
@@ -106,7 +106,7 @@ func (e *Event) isUnique(guestIndex int) (string, bool) {
 
 	// First time seeing this coordinate
 	e.GuestLocations.CoordianteMap.DestinationOccupancy[g.Coordinates] = g.GroupSize
-	e.GuestLocations.CoordianteMap.CoordinateToAddress[g.Coordinates] = g.Address
+	e.GuestLocations.CoordianteMap.CoordinateToAddress[g.Address] = g.Coordinates
 	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, g.Address)
 	return g.Coordinates.ToString(), true
 }

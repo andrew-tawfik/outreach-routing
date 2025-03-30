@@ -23,7 +23,7 @@ func (r *LocationRegistry) Display() {
 	}
 
 	fmt.Println("\nCoordinate to Address:")
-	for coord, addr := range r.CoordianteMap.CoordinateToAddress {
+	for addr, coord := range r.CoordianteMap.CoordinateToAddress {
 		fmt.Printf("  (%0.6f, %0.6f) → %s\n", coord.Long, coord.Lat, addr)
 	}
 

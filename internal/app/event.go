@@ -9,7 +9,7 @@ type LocationRegistry struct {
 
 type CoordinateMapping struct {
 	DestinationOccupancy map[coordinates.GuestCoordinates]int
-	CoordinateToAddress  map[coordinates.GuestCoordinates]string
+	CoordinateToAddress  map[string]coordinates.GuestCoordinates
 	AddressOrder         []string
 }
 
