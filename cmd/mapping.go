@@ -33,28 +33,14 @@ func mapDatabaseGeoEventToApp(geoEvent *geoapi.Event) (*app.Event, *app.Location
 		convertedGuest := app.Guest{
 			Name:        g.Name,
 			GroupSize:   g.GroupSize,
-			Coordinates: app.GuestCoordinates(g.Coordinates),
+			Coordinates: g.Coordinates,
 		}
 		appGuests = append(appGuests, convertedGuest)
 	}
 
-	// Convert DestinationOccupancy
-	appDestOccupancy := make(map[app.GuestCoordinates]int, len(geoEvent.GuestLocations.CoordianteMap.DestinationOccupancy))
-	for coord, count := range geoEvent.GuestLocations.CoordianteMap.DestinationOccupancy {
-		appCoord := app.GuestCoordinates(coord)
-		appDestOccupancy[appCoord] = count
-	}
-
-	// Convert CoordinateToAddress
-	appCoordToAddr := make(map[app.GuestCoordinates]string, len(geoEvent.GuestLocations.CoordianteMap.CoordinateToAddress))
-	for coord, address := range geoEvent.GuestLocations.CoordianteMap.CoordinateToAddress {
-		appCoord := app.GuestCoordinates(coord)
-		appCoordToAddr[appCoord] = address
-	}
-
 	appCoordMap := app.CoordinateMapping{
-		DestinationOccupancy: appDestOccupancy,
-		CoordinateToAddress:  appCoordToAddr,
+		DestinationOccupancy: geoEvent.GuestLocations.CoordianteMap.DestinationOccupancy,
+		CoordinateToAddress:  geoEvent.GuestLocations.CoordianteMap.CoordinateToAddress,
 		AddressOrder:         geoEvent.GuestLocations.CoordianteMap.AddressOrder,
 	}
 

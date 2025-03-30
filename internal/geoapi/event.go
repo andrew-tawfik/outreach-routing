@@ -1,6 +1,10 @@
 package geoapi
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
+)
 
 type GuestStatus int
 
@@ -18,12 +22,7 @@ type Guest struct {
 	Name        string
 	GroupSize   int
 	Address     string
-	Coordinates GuestCoordinates
-}
-
-type GuestCoordinates struct {
-	Long float64
-	Lat  float64
+	Coordinates coordinates.GuestCoordinates
 }
 
 type Event struct {
@@ -38,8 +37,8 @@ type LocationRegistry struct {
 }
 
 type CoordinateMapping struct {
-	DestinationOccupancy map[GuestCoordinates]int
-	CoordinateToAddress  map[GuestCoordinates]string
+	DestinationOccupancy map[coordinates.GuestCoordinates]int
+	CoordinateToAddress  map[coordinates.GuestCoordinates]string
 	AddressOrder         []string
 }
 
@@ -60,8 +59,8 @@ func (e *Event) RequestGuestCoordiantes() error {
 	if e.GuestLocations.CoordianteMap.DestinationOccupancy == nil &&
 		e.GuestLocations.CoordianteMap.CoordinateToAddress == nil {
 
-		e.GuestLocations.CoordianteMap.DestinationOccupancy = make(map[GuestCoordinates]int)
-		e.GuestLocations.CoordianteMap.CoordinateToAddress = make(map[GuestCoordinates]string)
+		e.GuestLocations.CoordianteMap.DestinationOccupancy = make(map[coordinates.GuestCoordinates]int)
+		e.GuestLocations.CoordianteMap.CoordinateToAddress = make(map[coordinates.GuestCoordinates]string)
 		e.GuestLocations.CoordianteMap.AddressOrder = make([]string, 0)
 	}
 
@@ -72,7 +71,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 	}
 	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, depotAddr)
 
-	depotCoorString := depotCoor.toString()
+	depotCoorString := depotCoor.ToString()
 	addToCoordListString(&depotCoorString)
 
 	for i := range e.Guests {
@@ -109,9 +108,5 @@ func (e *Event) isUnique(guestIndex int) (string, bool) {
 	e.GuestLocations.CoordianteMap.DestinationOccupancy[g.Coordinates] = g.GroupSize
 	e.GuestLocations.CoordianteMap.CoordinateToAddress[g.Coordinates] = g.Address
 	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, g.Address)
-	return g.Coordinates.toString(), true
-}
-
-func (gc *GuestCoordinates) toString() string {
-	return fmt.Sprintf("%f,%f;", gc.Long, gc.Lat)
+	return g.Coordinates.ToString(), true
 }

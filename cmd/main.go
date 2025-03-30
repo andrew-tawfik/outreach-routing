@@ -40,8 +40,8 @@ func main() {
 	//geoEvent.DisplayEvent()
 	appEvent, lr := mapDatabaseGeoEventToApp(geoEvent)
 	// Step 2. Fetch addresses exact coordinates that will be utilized
-	fmt.Println(appEvent)
-	fmt.Println(lr)
+	appEvent.Display()
+	lr.Display()
 	// Step 3. Fetch distance matrix
 
 	// Step 4. Determine the best route with RSP algorithm

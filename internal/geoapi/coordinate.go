@@ -7,24 +7,26 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
 // Global Client variable to handle requests
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
-func retreiveAddressCoordinate(address string) (GuestCoordinates, error) {
+func retreiveAddressCoordinate(address string) (coordinates.GuestCoordinates, error) {
 	url := buildGeocodeURL(address)
 
 	body, err := fetchGeocodeData(url)
 	if err != nil {
-		return GuestCoordinates{}, err
+		return coordinates.GuestCoordinates{}, err
 	}
 
-	coordinates, err := parseGeocodeResponse(body, "Ottawa")
+	coor, err := parseGeocodeResponse(body, "Ottawa")
 	if err != nil {
-		return GuestCoordinates{}, err
+		return coordinates.GuestCoordinates{}, err
 	}
-	return GuestCoordinates{coordinates[0], coordinates[1]}, nil
+	return coordinates.GuestCoordinates{Long: coor[0], Lat: coor[1]}, nil
 }
 
 func (g *Guest) geocodeGuestAddress() error {

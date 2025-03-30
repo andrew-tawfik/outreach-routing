@@ -1,13 +1,15 @@
 package app
 
+import "github.com/andrew-tawfik/outreach-routing/internal/coordinates"
+
 type LocationRegistry struct {
 	DistanceMatrix [][]float64
 	CoordianteMap  CoordinateMapping
 }
 
 type CoordinateMapping struct {
-	DestinationOccupancy map[GuestCoordinates]int
-	CoordinateToAddress  map[GuestCoordinates]string
+	DestinationOccupancy map[coordinates.GuestCoordinates]int
+	CoordinateToAddress  map[coordinates.GuestCoordinates]string
 	AddressOrder         []string
 }
 
@@ -24,5 +26,5 @@ type Event struct {
 type Guest struct {
 	Name        string
 	GroupSize   int
-	Coordinates GuestCoordinates
+	Coordinates coordinates.GuestCoordinates
 }
