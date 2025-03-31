@@ -16,10 +16,15 @@ type Vehicle struct {
 
 type RouteManager struct {
 	Vehicles              []Vehicle
-	ServedDestinations    map[int]bool
+	ServedDestinations    map[int]int
 	DestinationGuestCount []int
 	SavingList            savingsList
 }
+
+var maxVehicleSeats int = 4
+
+// Delete later for debugging only
+var addressOrder []string
 
 func CreateRouteManager(lr *LocationRegistry, numVehicles int) *RouteManager {
 
@@ -28,19 +33,22 @@ func CreateRouteManager(lr *LocationRegistry, numVehicles int) *RouteManager {
 	addrMap := &lr.CoordianteMap.CoordinateToAddress
 
 	destinationGuestCount := make([]int, len(*ao))
-	servedDestinations := make(map[int]bool)
+	servedDestinations := make(map[int]int)
 
 	i := 0
 
 	for _, addr := range *ao {
 		guestCount := (*destinationCount)[(*addrMap)[addr]]
 		destinationGuestCount[i] = guestCount
-		servedDestinations[i] = false
+		servedDestinations[i] = -1
 		i++
 	}
 	vehicles := createVehicles(numVehicles)
 	savings := &savingsList{}
 	heap.Init(savings)
+
+	//Delete Later
+	addressOrder = lr.CoordianteMap.AddressOrder
 
 	return &RouteManager{
 		Vehicles:              vehicles,
@@ -51,7 +59,7 @@ func CreateRouteManager(lr *LocationRegistry, numVehicles int) *RouteManager {
 }
 
 func createVehicles(numVehicles int) []Vehicle {
-	v := Vehicle{SeatsRemaining: 5}
+	v := Vehicle{SeatsRemaining: maxVehicleSeats}
 	vehicles := make([]Vehicle, 0, numVehicles)
 	i := 0
 	for i < numVehicles {

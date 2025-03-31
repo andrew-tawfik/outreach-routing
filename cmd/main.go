@@ -41,11 +41,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading:", err)
 	} else {
-		fmt.Println("Successfuly read")
+		fmt.Println("Successfully read")
 	}
 	// Step 2. Fetch addresses exact coordinates that will be utilized
 	//appEvent.Display()
-	//lr.Display()
+	// lr.Display()
 
 	// Just so Go is happy - delete later
 	if 1 == 5 {
@@ -55,9 +55,12 @@ func main() {
 
 	RouteManager := app.CreateRouteManager(&lr, 8)
 	RouteManager.DetermineSavingList(&lr)
-	fmt.Println(RouteManager.SavingList)
+	RouteManager.StartRouteDispatch()
 
-	RouteManager.TestRemoveAll()
+	RouteManager.DisplayResults()
+
+	// RouteManager.TestRemoveAll()
+
 	// Step 3. Fetch distance matrix
 
 	// Step 4. Determine the best route with RSP algorithm

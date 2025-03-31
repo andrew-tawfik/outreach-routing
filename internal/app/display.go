@@ -74,3 +74,30 @@ func truncate(name string, max int) string {
 	}
 	return name[:max-1] + "…"
 }
+
+func (rm *RouteManager) DisplayResults() {
+	//
+	for i, v := range rm.Vehicles {
+		v.DisplayVehicleRoute(i)
+	}
+}
+
+func (v *Vehicle) DisplayVehicleRoute(index int) {
+	nodeVisited := make([]int, 0)
+	for e := v.Route.List.Front(); e != nil; e = e.Next() {
+		nodeVisited = append(nodeVisited, e.Value.(int))
+	}
+
+	addressesVisited := determineAddressesVisited(nodeVisited)
+	fmt.Printf("Vehicle %d: %v. (Remaining Seats in vehicle: %d) \n", index, addressesVisited, v.SeatsRemaining)
+
+}
+
+func determineAddressesVisited(nodeVisited []int) []string {
+
+	addressesVisited := make([]string, 0)
+	for _, val := range nodeVisited {
+		addressesVisited = append(addressesVisited, addressOrder[val])
+	}
+	return addressesVisited
+}
