@@ -1,13 +1,11 @@
 package app
 
-import (
-	"container/heap"
-	"fmt"
-	"time"
-)
-
+// savingsList implements a max-heap of savings between guest locations.
+// It is used to determine the most cost-effective route merges first.
 type savingsList []saving
 
+// saving represents the "value" of merging two guest locations (i, j)
+// based on the Clarke-Wright formula: d(depot, i) + d(depot, j) - d(i, j)
 type saving struct {
 	i, j  int
 	value float64
@@ -27,24 +25,4 @@ func (h *savingsList) Pop() any {
 	x := old[n-1]
 	*h = old[:n-1]
 	return x
-}
-
-func (h *savingsList) popAll() {
-	for h.Len() > 0 {
-		e := heap.Pop(h).(saving)
-		fmt.Printf("Popped: (%d, %d) = %f\n", e.i, e.j, e.value)
-		time.Sleep(10 * time.Millisecond)
-	}
-}
-
-func TestMaxHeap() {
-
-	h := &savingsList{}
-	heap.Init(h)
-
-	heap.Push(h, saving{i: 0, j: 1, value: 10})
-	heap.Push(h, saving{i: 2, j: 3, value: 25})
-	heap.Push(h, saving{i: 1, j: 1, value: 5})
-	h.popAll()
-
 }
