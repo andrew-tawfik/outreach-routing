@@ -6,6 +6,8 @@ import (
 	"github.com/andrew-tawfik/outreach-routing/internal/geoapi"
 )
 
+// mapDatabaseEventToHttp converts an Event from the database layer
+// to the format expected by the geoapi layer
 func mapDatabaseEventToHttp(dbEvent *database.Event) *geoapi.Event {
 	numGuests := len((*dbEvent).Guests)
 	httpGuests := make([]geoapi.Guest, 0, numGuests)
@@ -25,6 +27,7 @@ func mapDatabaseEventToHttp(dbEvent *database.Event) *geoapi.Event {
 	}
 }
 
+// mapDatabaseGeoEventToApp converts a geoapi.Event into the app layer's Event and LocationRegistry
 func mapDatabaseGeoEventToApp(geoEvent *geoapi.Event) (*app.Event, *app.LocationRegistry) {
 	numGuests := len(geoEvent.Guests)
 	appGuests := make([]app.Guest, 0, numGuests)
@@ -38,6 +41,7 @@ func mapDatabaseGeoEventToApp(geoEvent *geoapi.Event) (*app.Event, *app.Location
 		appGuests = append(appGuests, convertedGuest)
 	}
 
+	// Map coordinate-related metadata to the app layer
 	appCoordMap := app.CoordinateMapping{
 		DestinationOccupancy: geoEvent.GuestLocations.CoordianteMap.DestinationOccupancy,
 		CoordinateToAddress:  geoEvent.GuestLocations.CoordianteMap.CoordinateToAddress,

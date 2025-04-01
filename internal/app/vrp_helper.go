@@ -2,6 +2,7 @@ package app
 
 import "fmt"
 
+// isExternal checks if a location is at the front or back of the current route.
 func (r *Route) isExternal(locationIndex int) (string, bool) {
 	if r.List == nil || r.List.Len() == 0 {
 		return "", false
@@ -19,6 +20,8 @@ func (r *Route) isExternal(locationIndex int) (string, bool) {
 	return "", false
 }
 
+// extendRoute attempts to extend the route by adding a new location
+// to either the front or back, depending on where the existing location is.
 func (r *Route) extendRoute(existingLocation, newLocation int) bool {
 	orientation, ok := r.isExternal(existingLocation)
 	if !ok {
@@ -34,6 +37,8 @@ func (r *Route) extendRoute(existingLocation, newLocation int) bool {
 	}
 }
 
+// getRouteExtensionEndpoints returns the (existing, new) location order
+// based on which one is already assigned to the given vehicle.
 func (rm *RouteManager) getRouteExtensionEndpoints(vehicleIndex, location1, location2 int) (existingLocation, newLocation int) {
 	if rm.ServedDestinations[location1] == vehicleIndex {
 		return location1, location2
@@ -41,9 +46,16 @@ func (rm *RouteManager) getRouteExtensionEndpoints(vehicleIndex, location1, loca
 	return location2, location1
 }
 
+// determineVehicle selects an appropriate vehicle index for a given action:
+//
+// action = 0: initiate a new route (needs a fresh vehicle with enough seats)
+// action = 1: extend an existing route (choose the already-assigned vehicle)
+// action = 2: create a solo route (like action 0 but for one guest only)
 func (rm *RouteManager) determineVehicle(action, location1, location2 int) (int, error) {
+	switch action {
 
-	if action == 0 {
+	case 0:
+		// Find an unused vehicle with enough seats for both guests
 		for i, v := range rm.Vehicles {
 			if rm.enoughSeatsToInitialize(i, location1, location2) && v.Route.List == nil {
 				return i, nil
@@ -51,28 +63,30 @@ func (rm *RouteManager) determineVehicle(action, location1, location2 int) (int,
 		}
 		return -1, fmt.Errorf("no new vehicles available to initiate")
 
-	} else if action == 1 {
+	case 1:
+		// Determine which location is already assigned and return that vehicle
 		assignedI := rm.ServedDestinations[location1]
 		assignedJ := rm.ServedDestinations[location2]
 		if assignedI != -1 {
 			return assignedI, nil
-		} else {
-			return assignedJ, nil
 		}
+		return assignedJ, nil
 
-	} else if action == 2 {
+	case 2:
+		// Find an unused vehicle with exactly the number of seats needed for this guest
 		for i, v := range rm.Vehicles {
 			if rm.enoughSeatsToInitializeSolo(i, location1) && v.Route.List == nil {
 				return i, nil
 			}
 		}
 		return -1, fmt.Errorf("no new vehicles available to initiate")
-
 	}
 
-	return -1, fmt.Errorf("unfinished function change later")
+	return -1, fmt.Errorf("unfinished function — invalid action code")
 }
 
+// enoughSeatsToInitialize checks if the vehicle has enough seats
+// for both guest locations to be added in one new route.
 func (rm *RouteManager) enoughSeatsToInitialize(vehicleIndex, locationI, locationJ int) bool {
 	v := &rm.Vehicles[vehicleIndex]
 	guestsAtI := rm.DestinationGuestCount[locationI]
@@ -81,12 +95,16 @@ func (rm *RouteManager) enoughSeatsToInitialize(vehicleIndex, locationI, locatio
 	return v.SeatsRemaining >= guestsAtI+guestsAtJ
 }
 
+// enoughSeatsToInitializeSolo checks if a vehicle has exactly the right
+// number of seats remaining to accommodate a single location.
 func (rm *RouteManager) enoughSeatsToInitializeSolo(vehicleIndex, locationI int) bool {
 	v := &rm.Vehicles[vehicleIndex]
 	guestsAtI := rm.DestinationGuestCount[locationI]
 	return v.SeatsRemaining == guestsAtI
 }
 
+// enoughSeatsToExtend checks if the vehicle has enough remaining seats
+// to add the new location to an existing route.
 func (rm *RouteManager) enoughSeatsToExtend(vehicleIndex, newLocation int) bool {
 	v := &rm.Vehicles[vehicleIndex]
 	guestsAtLocation := rm.DestinationGuestCount[newLocation]

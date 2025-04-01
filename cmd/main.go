@@ -9,60 +9,60 @@ import (
 )
 
 func main() {
-	//Retreive guests names and addresses who will require a service
+	// Prompt user for the Google Sheet URL that contains event and guest information
 	fmt.Println("Please provide Google SheetURL")
 
 	var googleSheetURL string
 	fmt.Scanln(&googleSheetURL)
 
+	// Extract the spreadsheet ID from the provided URL
 	spreadsheetID, err := database.ExtractIDFromURL(googleSheetURL)
 
 	if err != nil {
 		log.Fatalf("error extracting ID: %v", err)
 	}
 
+	// Initialize Google Sheets client
 	db, err := database.NewSheetClient(spreadsheetID)
 	if err != nil {
 		log.Fatalf("could not initialize sheet client: %v", err)
 	}
 
+	// Parse event and guest data from the sheet
 	event, err := db.ProcessEvent()
 	if err != nil {
 		log.Fatalf("Could not process event: %v", err)
 	}
 
+	// Map database event to geo event structure for coordinate lookup
 	geoEvent := mapDatabaseEventToHttp(event)
+
+	// Filter guests who require transportation service (ie Confirmed or GroceryOnly)
 	geoEvent.FilterGuestForService()
+
+	// Request GPS coordinates for all guest addresses
 	geoEvent.RequestGuestCoordiantes()
 
+	// Request distance matrix for all coordinates
 	geoEvent.RetreiveDistanceMatrix()
+
+	// Map geo-level data to app-level event and location registry
 	appEvent, lr := mapDatabaseGeoEventToApp(geoEvent)
 
-	// appEvent, lr, err := app.LoadAppDataFromFile("data.json")
-	// if err != nil {
-	// 	log.Fatal("Error loading:", err)
-	// } else {
-	// 	fmt.Println("Successfully read")
-	// }
-	// Step 2. Fetch addresses exact coordinates that will be utilized
+	// Set vehicle count
+	vehicleCount := 8
 
-	err = app.SaveAppDataToFile("data.json", *appEvent, *lr)
-	if err != nil {
-		log.Fatalf("Could not save data: %v", err)
-	}
+	// Initialize the route manager
+	RouteManager := app.CreateRouteManager(lr, vehicleCount)
 
-	RouteManager := app.CreateRouteManager(lr, 8)
+	// Determine savings between guest pairings using Clarke-Wright Algorithm
 	RouteManager.DetermineSavingList(lr)
+
+	// Start Route Dispatch Algorithm
 	RouteManager.StartRouteDispatch()
 
+	// Display Results
 	RouteManager.DisplayResults()
 	appEvent.Display()
 
-	// RouteManager.TestRemoveAll()
-
-	// Step 3. Fetch distance matrix
-
-	// Step 4. Determine the best route with RSP algorithm
-
-	// Step 5. Output: display the routes
 }
