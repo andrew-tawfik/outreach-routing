@@ -6,8 +6,10 @@ import (
 	"gopkg.in/Iwark/spreadsheet.v2"
 )
 
+// GuestStatus represents the RSVP or participation status of a guest.
 type GuestStatus int
 
+// Defined guest statuses based on spreadsheet cell content.
 const (
 	Pending GuestStatus = iota
 	Confirmed
@@ -17,14 +19,16 @@ const (
 	Undecided
 )
 
+// Guest holds the structured information extracted from a spreadsheet row.
 type Guest struct {
-	Status      GuestStatus
+	Status      GuestStatus // Enum of guest participation
 	Name        string
-	GroupSize   int
+	GroupSize   int // Number of people in this guest's group
 	PhoneNumber string
 	Address     string
 }
 
+// processGuest converts a single row into a Guest struct.
 func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 	status := determineGuestStatus((*row)[0].Value)
 	name := (*row)[1].Value
@@ -33,11 +37,13 @@ func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 	address := (*row)[4].Value
 	validGuest := true
 
+	// Convert group size to integer and ensure it's > 0
 	iCount, err := strconv.Atoi(count)
-	if err != nil || iCount <= 0 { // Ensure iCount > 0
+	if err != nil || iCount <= 0 {
 		validGuest = false
 	}
 
+	// Guests must have both a name and address
 	if name == "" || address == "" {
 		validGuest = false
 	}
@@ -51,18 +57,20 @@ func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 	}, validGuest
 }
 
+// determineGuestStatus maps a spreadsheet status string to a GuestStatus enum.
 func determineGuestStatus(cellContent string) GuestStatus {
-	if cellContent == "Confirmed" {
+	switch cellContent {
+	case "Confirmed":
 		return Confirmed
-	} else if cellContent == "Grocery Only" {
+	case "Grocery Only":
 		return GroceryOnly
-	} else if cellContent == "Pending" {
+	case "Pending":
 		return Pending
-	} else if cellContent == "Not started" {
+	case "Not started":
 		return NotStarted
-	} else if cellContent == "NO" || cellContent == "Not eligiable" {
+	case "NO", "Not eligiable":
 		return No
-	} else {
+	default:
 		return Undecided
 	}
 }

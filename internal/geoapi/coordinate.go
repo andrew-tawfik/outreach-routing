@@ -11,9 +11,11 @@ import (
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
-// Global Client variable to handle requests
+// httpClient is a shared HTTP client with timeout, reused for all geocoding requests.
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
+// retreiveAddressCoordinate takes a raw address string, sends a geocode request to Nominatim,
+// and returns the best-matched geographic coordinates (longitude, latitude).
 func retreiveAddressCoordinate(address string) (coordinates.GuestCoordinates, error) {
 	url := buildGeocodeURL(address)
 
@@ -22,13 +24,14 @@ func retreiveAddressCoordinate(address string) (coordinates.GuestCoordinates, er
 		return coordinates.GuestCoordinates{}, err
 	}
 
-	coor, err := parseGeocodeResponse(body, "Ottawa")
+	coor, err := parseGeocodeResponse(body, "Ottawa") // Match based on city keyword
 	if err != nil {
 		return coordinates.GuestCoordinates{}, err
 	}
 	return coordinates.GuestCoordinates{Long: coor[0], Lat: coor[1]}, nil
 }
 
+// geocodeGuestAddress assigns GPS coordinates to the guest's address
 func (g *Guest) geocodeGuestAddress() error {
 
 	gc, err := retreiveAddressCoordinate(g.Address)
@@ -39,11 +42,13 @@ func (g *Guest) geocodeGuestAddress() error {
 	return nil
 }
 
+// buildGeocodeURL creates a Nominatim search URL from a sanitized address.
 func buildGeocodeURL(address string) string {
 	polishAddress(&address)
 	return fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=geojson", address)
 }
 
+// fetchGeocodeData performs an HTTP GET request to the given URL with retry logic.
 func fetchGeocodeData(url string) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -64,11 +69,13 @@ func fetchGeocodeData(url string) ([]byte, error) {
 			break
 		}
 
+		// Retry if service is temporarily unavailable
 		if resp.StatusCode == http.StatusServiceUnavailable {
 			time.Sleep(2 * time.Second)
 			continue
 		}
 
+		// Fail on unexpected status codes
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
@@ -79,6 +86,8 @@ func fetchGeocodeData(url string) ([]byte, error) {
 	return body, nil
 }
 
+// parseGeocodeResponse extracts coordinates from the raw response,
+// filtered by a city keyword (e.g., "Ottawa") to retreive accurate location.
 func parseGeocodeResponse(body []byte, city string) ([]float64, error) {
 	var nr NominatimResponse
 	if err := json.Unmarshal(body, &nr); err != nil {
@@ -92,20 +101,20 @@ func parseGeocodeResponse(body []byte, city string) ([]float64, error) {
 	return coordinates, nil
 }
 
+// polishAddress cleans and formats an address string to make it suitable for OSRM request.
+// - Removes apartment/unit suffixes.
+// - Trims spaces and converts to lowercase.
+// - Replaces spaces with '+' for URL encoding.
 func polishAddress(rawAddress *string) {
 	address := strings.ToLower(*rawAddress)
 
-	// Remove anything after "apt" or "unit"
 	if i := strings.Index(address, "apt"); i != -1 {
 		address = address[:i]
 	} else if i := strings.Index(address, "unit"); i != -1 {
 		address = address[:i]
 	}
 
-	// Remove leading/trailing whitespace
 	address = strings.TrimSpace(address)
-
-	// Replace spaces with '+'
 	address = strings.ReplaceAll(address, " ", "+")
 
 	*rawAddress = address

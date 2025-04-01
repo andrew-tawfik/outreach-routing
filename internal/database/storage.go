@@ -11,10 +11,13 @@ import (
 	"gopkg.in/Iwark/spreadsheet.v2"
 )
 
+// Database wraps the Google Sheets spreadsheet object
+// and represents your external data source.
 type Database struct {
 	sheet spreadsheet.Spreadsheet
 }
 
+// NewSheetClient initializes a Google Sheets client using credentials
 func NewSheetClient(spreadsheetID string) (*Database, error) {
 
 	path := os.Getenv("GOOGLE_CREDENTIALS_PATH")
@@ -24,6 +27,7 @@ func NewSheetClient(spreadsheetID string) (*Database, error) {
 		log.Fatalln("cannot read client_secret json file")
 	}
 
+	// Create a JWT-based authenticated client using the provided credentials
 	conf, err := google.JWTConfigFromJSON(data, spreadsheet.Scope)
 	if err != nil {
 		log.Fatalln("cannot config from json")
@@ -41,22 +45,20 @@ func NewSheetClient(spreadsheetID string) (*Database, error) {
 	return &Database{sheet: sheet}, nil
 }
 
+// ExtractIDFromURL parses a standard Google Sheets URL
 func ExtractIDFromURL(url string) (string, error) {
 	const marker = "/d/"
 
-	// Locate the starting index of the spreadsheet ID
 	start := strings.Index(url, marker)
 	if start == -1 {
 		return "", fmt.Errorf("failed to extract spreadsheet ID: '/d/' not found in URL")
 	}
 	start += len(marker)
 
-	// Locate the next "/" after the ID to determine the endpoint
 	end := strings.Index(url[start:], "/")
 	if end == -1 {
 		return "", fmt.Errorf("failed to extract spreadsheet ID: no trailing '/' found after ID")
 	}
 
-	// Extract and return the ID substring
 	return url[start : start+end], nil
 }
