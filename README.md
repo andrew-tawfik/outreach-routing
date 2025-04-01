@@ -20,13 +20,13 @@ At its core, the tool solves the Vehicle Routing Problem (VRP). This is a classi
 ---
 
 ## Project Structure
-
+```
 /cmd/             → CLI entrypoint and orchestration
 /internal/
   └── database/   → Fetches and parses Google Sheets data
   └── geoapi/     → Handles geocoding (Nominatim) and routing (OSRM) APIs
   └── app/        → Core domain logic: routing, distance handling, optimization
-
+```
 
 
 ## Input Format
