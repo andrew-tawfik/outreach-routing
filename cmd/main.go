@@ -5,59 +5,58 @@ import (
 	"log"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
+	"github.com/andrew-tawfik/outreach-routing/internal/database"
 )
 
 func main() {
 	//Retreive guests names and addresses who will require a service
-	// fmt.Println("Please provide Google SheetURL")
+	fmt.Println("Please provide Google SheetURL")
 
-	// var googleSheetURL string
-	// fmt.Scanln(&googleSheetURL)
+	var googleSheetURL string
+	fmt.Scanln(&googleSheetURL)
 
-	// spreadsheetID, err := database.ExtractIDFromURL(googleSheetURL)
+	spreadsheetID, err := database.ExtractIDFromURL(googleSheetURL)
 
-	// if err != nil {
-	// 	log.Fatalf("error extracting ID: %v", err)
-	// }
-
-	// db, err := database.NewSheetClient(spreadsheetID)
-	// if err != nil {
-	// 	log.Fatalf("could not initialize sheet client: %v", err)
-	// }
-
-	// event, err := db.ProcessEvent()
-	// if err != nil {
-	// 	log.Fatalf("Could not process event: %v", err)
-	// }
-
-	// geoEvent := mapDatabaseEventToHttp(event)
-	// geoEvent.FilterGuestForService()
-	// geoEvent.RequestGuestCoordiantes()
-
-	// geoEvent.RetreiveDistanceMatrix()
-	// appEvent, lr := mapDatabaseGeoEventToApp(geoEvent)
-
-	appEvent, lr, err := app.LoadAppDataFromFile("data.json")
 	if err != nil {
-		log.Fatal("Error loading:", err)
-	} else {
-		fmt.Println("Successfully read")
+		log.Fatalf("error extracting ID: %v", err)
 	}
+
+	db, err := database.NewSheetClient(spreadsheetID)
+	if err != nil {
+		log.Fatalf("could not initialize sheet client: %v", err)
+	}
+
+	event, err := db.ProcessEvent()
+	if err != nil {
+		log.Fatalf("Could not process event: %v", err)
+	}
+
+	geoEvent := mapDatabaseEventToHttp(event)
+	geoEvent.FilterGuestForService()
+	geoEvent.RequestGuestCoordiantes()
+
+	geoEvent.RetreiveDistanceMatrix()
+	appEvent, lr := mapDatabaseGeoEventToApp(geoEvent)
+
+	// appEvent, lr, err := app.LoadAppDataFromFile("data.json")
+	// if err != nil {
+	// 	log.Fatal("Error loading:", err)
+	// } else {
+	// 	fmt.Println("Successfully read")
+	// }
 	// Step 2. Fetch addresses exact coordinates that will be utilized
-	//appEvent.Display()
-	// lr.Display()
 
-	// Just so Go is happy - delete later
-	if 1 == 5 {
-		fmt.Println(appEvent)
-
+	err = app.SaveAppDataToFile("data.json", *appEvent, *lr)
+	if err != nil {
+		log.Fatalf("Could not save data: %v", err)
 	}
 
-	RouteManager := app.CreateRouteManager(&lr, 8)
-	RouteManager.DetermineSavingList(&lr)
+	RouteManager := app.CreateRouteManager(lr, 8)
+	RouteManager.DetermineSavingList(lr)
 	RouteManager.StartRouteDispatch()
 
 	RouteManager.DisplayResults()
+	appEvent.Display()
 
 	// RouteManager.TestRemoveAll()
 

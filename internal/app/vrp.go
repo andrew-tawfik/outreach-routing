@@ -97,7 +97,6 @@ func (rm *RouteManager) initializeSoloRoute(location1 int) {
 
 func (rm *RouteManager) canAttachToRoute(vehicleIndex, location1, location2 int) {
 
-	//
 	route := &rm.Vehicles[vehicleIndex].Route
 
 	existingLocation, newLocation := rm.getRouteExtensionEndpoints(vehicleIndex, location1, location2)

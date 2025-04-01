@@ -9,7 +9,7 @@ func (e *Event) Display() {
 	fmt.Printf("Type: %s\n", e.EventType)
 	fmt.Println("Guests:")
 	for i, guest := range e.Guests {
-		fmt.Printf("  [%d] Name: %s | Group Size: %d | Coordinates: (Lat: %.6f, Long: %.6f)\n",
+		fmt.Printf("  [%d] Name: %s |Group Size: %d | Coordinates: (Lat: %.6f, Long: %.6f)\n",
 			i, guest.Name, guest.GroupSize, guest.Coordinates.Long, guest.Coordinates.Lat)
 	}
 	fmt.Println()
@@ -84,12 +84,14 @@ func (rm *RouteManager) DisplayResults() {
 
 func (v *Vehicle) DisplayVehicleRoute(index int) {
 	nodeVisited := make([]int, 0)
-	for e := v.Route.List.Front(); e != nil; e = e.Next() {
-		nodeVisited = append(nodeVisited, e.Value.(int))
-	}
+	if v.Route.List != nil {
+		for e := v.Route.List.Front(); e != nil; e = e.Next() {
+			nodeVisited = append(nodeVisited, e.Value.(int))
+		}
 
-	addressesVisited := determineAddressesVisited(nodeVisited)
-	fmt.Printf("Vehicle %d: %v. (Remaining Seats in vehicle: %d) \n", index, addressesVisited, v.SeatsRemaining)
+		addressesVisited := determineAddressesVisited(nodeVisited)
+		fmt.Printf("Vehicle %d: %v. (Remaining Seats in vehicle: %d) \n", index, addressesVisited, v.SeatsRemaining)
+	}
 
 }
 
