@@ -92,7 +92,9 @@ func (rm *RouteManager) enoughSeatsToInitialize(vehicleIndex, locationI, locatio
 	guestsAtI := rm.DestinationGuestCount[locationI]
 	guestsAtJ := rm.DestinationGuestCount[locationJ]
 
-	return v.SeatsRemaining >= guestsAtI+guestsAtJ
+	underThreeStops := v.Route.DestinationCount < 3
+
+	return v.SeatsRemaining >= guestsAtI+guestsAtJ && underThreeStops
 }
 
 // enoughSeatsToInitializeSolo checks if a vehicle has exactly the right
@@ -100,7 +102,9 @@ func (rm *RouteManager) enoughSeatsToInitialize(vehicleIndex, locationI, locatio
 func (rm *RouteManager) enoughSeatsToInitializeSolo(vehicleIndex, locationI int) bool {
 	v := &rm.Vehicles[vehicleIndex]
 	guestsAtI := rm.DestinationGuestCount[locationI]
-	return v.SeatsRemaining == guestsAtI
+
+	underThreeStops := v.Route.DestinationCount < 3
+	return v.SeatsRemaining == guestsAtI && underThreeStops
 }
 
 // enoughSeatsToExtend checks if the vehicle has enough remaining seats
@@ -109,5 +113,7 @@ func (rm *RouteManager) enoughSeatsToExtend(vehicleIndex, newLocation int) bool 
 	v := &rm.Vehicles[vehicleIndex]
 	guestsAtLocation := rm.DestinationGuestCount[newLocation]
 
-	return v.SeatsRemaining >= guestsAtLocation
+	underThreeStops := v.Route.DestinationCount < 3
+
+	return v.SeatsRemaining >= guestsAtLocation && underThreeStops
 }

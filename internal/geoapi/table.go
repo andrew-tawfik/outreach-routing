@@ -57,17 +57,12 @@ func fetchDistanceMatrix(url *string) ([]byte, error) {
 	}
 
 	req.Header.Set("User-Agent", "outreach-routing/1.0")
-	resp, err := httpClient.Do(req)
+
+	resp, err := sendWithRetry(req)
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println(resp.Status)
-		return nil, fmt.Errorf("osrm server: %s", resp.Status)
-	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

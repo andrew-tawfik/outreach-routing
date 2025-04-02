@@ -133,6 +133,7 @@ func (rm *RouteManager) initiateNewRoute(location1, location2 int) {
 func (rm *RouteManager) update(vehicleIndex, location int) {
 	v := &rm.Vehicles[vehicleIndex]
 
+	v.Route.DestinationCount++
 	v.SeatsRemaining -= rm.DestinationGuestCount[location]
 	rm.ServedDestinations[location] = vehicleIndex
 }

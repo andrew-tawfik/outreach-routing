@@ -48,6 +48,10 @@ func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 		validGuest = false
 	}
 
+	if status == GroceryOnly {
+		iCount = 0
+	}
+
 	return Guest{
 		Status:      status,
 		Name:        name,

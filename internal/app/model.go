@@ -7,7 +7,8 @@ import (
 
 // Route holds the doubly-linked list of destination indices assigned to a vehicle.
 type Route struct {
-	List *list.List
+	List             *list.List
+	DestinationCount int
 }
 
 // Vehicle represents a single transport unit with a route and remaining seat capacity.

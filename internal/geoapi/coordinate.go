@@ -56,28 +56,11 @@ func fetchGeocodeData(url string) ([]byte, error) {
 	}
 	req.Header.Set("User-Agent", "outreach-routing/1.0")
 
-	var resp *http.Response
-	for attempts := 0; attempts < 3; attempts++ { // Retry up to 3 times
-		resp, err = httpClient.Do(req)
-		if err != nil {
-			fmt.Printf("HTTP request failed for %s: %v\n", url, err)
-			return nil, err
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode == http.StatusOK {
-			break
-		}
-
-		// Retry if service is temporarily unavailable
-		if resp.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-
-		// Fail on unexpected status codes
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	resp, err := sendWithRetry(req)
+	if err != nil {
+		return nil, err
 	}
+	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -118,4 +101,34 @@ func polishAddress(rawAddress *string) {
 	address = strings.ReplaceAll(address, " ", "+")
 
 	*rawAddress = address
+}
+
+// sendWithRetry executes an HTTP request with retry logic and returns the response.
+func sendWithRetry(req *http.Request) (*http.Response, error) {
+	const maxAttempts = 3
+
+	for attempts := 0; attempts < maxAttempts; attempts++ {
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			fmt.Printf("HTTP request failed for %s: %v\n", req.URL.String(), err)
+			return nil, err
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			return resp, nil
+		}
+
+		if resp.StatusCode == http.StatusServiceUnavailable {
+			// Retry after short wait
+			resp.Body.Close()
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		// Don't retry on unexpected status
+		resp.Body.Close()
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return nil, fmt.Errorf("request to %s failed after %d attempts", req.URL.String(), maxAttempts)
 }
