@@ -34,5 +34,5 @@ func (nr *NominatimResponse) locateCoordinatesByKeyword(keyword string) (coordin
 			return f.Geometry.Coordinates, nil
 		}
 	}
-	return coordinates, fmt.Errorf("no feature associated with %s", keyword)
+	return coordinates, fmt.Errorf("no address associated with %s", keyword)
 }

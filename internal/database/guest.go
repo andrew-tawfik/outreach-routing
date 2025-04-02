@@ -39,7 +39,7 @@ func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 
 	// Convert group size to integer and ensure it's > 0
 	iCount, err := strconv.Atoi(count)
-	if err != nil || iCount <= 0 {
+	if err != nil {
 		validGuest = false
 	}
 

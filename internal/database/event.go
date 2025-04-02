@@ -50,8 +50,10 @@ func determineEventType(sheet *spreadsheet.Sheet) (string, error) {
 
 	switch {
 	case strings.Contains(title, "Dinner"):
+		fmt.Println("Dinner Event!")
 		return "Dinner", nil
 	case strings.Contains(title, "Grocery"):
+		fmt.Println("Grocery Event!")
 		return "Grocery", nil
 	default:
 		return "", fmt.Errorf("title must include either 'Dinner' or 'Grocery'")
@@ -72,5 +74,6 @@ func verifyColumnTitles(row *[]spreadsheet.Cell) error {
 			return fmt.Errorf("column %d mismatch: expected %q, got %q", i, expected, (*row)[i].Value)
 		}
 	}
+
 	return nil
 }

@@ -28,12 +28,12 @@ func retreiveAddressCoordinate(address string) (coordinates.GuestCoordinates, er
 	if err != nil {
 		return coordinates.GuestCoordinates{}, err
 	}
+
 	return coordinates.GuestCoordinates{Long: coor[0], Lat: coor[1]}, nil
 }
 
 // geocodeGuestAddress assigns GPS coordinates to the guest's address
 func (g *Guest) geocodeGuestAddress() error {
-
 	gc, err := retreiveAddressCoordinate(g.Address)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func parseGeocodeResponse(body []byte, city string) ([]float64, error) {
 
 	coordinates, err := nr.locateCoordinatesByKeyword(city)
 	if err != nil {
-		return nil, fmt.Errorf("could not extract coordinates: %v", err)
+		return nil, fmt.Errorf("could not extract coordinates, %v", err)
 	}
 	return coordinates, nil
 }

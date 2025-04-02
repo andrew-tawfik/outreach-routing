@@ -1,6 +1,8 @@
 package geoapi
 
 import (
+	"log"
+
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
@@ -53,7 +55,11 @@ var coordListURL string
 // Only guests marked Confirmed or GroceryOnly are kept.
 func (e *Event) FilterGuestForService() {
 	filteredGuests := make([]Guest, 0)
+
 	for _, g := range e.Guests {
+		if e.EventType == "Grocery" {
+			g.GroupSize = 0
+		}
 		if g.Status == Confirmed || g.Status == GroceryOnly {
 			filteredGuests = append(filteredGuests, g)
 		}
@@ -62,7 +68,7 @@ func (e *Event) FilterGuestForService() {
 }
 
 // RequestGuestCoordiantes performs geocoding on all filtered guests
-func (e *Event) RequestGuestCoordiantes() error {
+func (e *Event) RequestGuestCoordiantes() {
 	// Initialize coordinate mapping if empty
 	if e.GuestLocations.CoordianteMap.DestinationOccupancy == nil &&
 		e.GuestLocations.CoordianteMap.CoordinateToAddress == nil {
@@ -76,7 +82,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 	depotAddr := "555 Parkdale Ave"
 	depotCoor, err := retreiveAddressCoordinate(depotAddr)
 	if err != nil {
-		return err
+		log.Println("Could not geocode SMSM address: ", err)
 	}
 	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, depotAddr)
 
@@ -87,7 +93,9 @@ func (e *Event) RequestGuestCoordiantes() error {
 	for i := range e.Guests {
 		err := e.Guests[i].geocodeGuestAddress()
 		if err != nil {
-			return err
+			log.Printf("Warning: Failed to find address coordinates: %s. Reason: %v\n Program will proceed, please manually add Guest: %s",
+				e.Guests[i].Address, err, e.Guests[i].Name)
+			continue
 		}
 		coor, unique := e.isUnique(i)
 		if unique {
@@ -96,7 +104,6 @@ func (e *Event) RequestGuestCoordiantes() error {
 
 	}
 
-	return nil
 }
 
 // addToCoordListString appends a new semicolon-prefixed coordinate string
