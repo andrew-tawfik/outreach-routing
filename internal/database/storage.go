@@ -41,7 +41,6 @@ func NewSheetClient(spreadsheetID string) (*Database, error) {
 		log.Fatalf("Failed to fetch spreadsheet: %v", err)
 	}
 
-	fmt.Println("Connection to database established ")
 	return &Database{sheet: sheet}, nil
 }
 

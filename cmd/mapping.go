@@ -37,6 +37,7 @@ func mapDatabaseGeoEventToApp(geoEvent *geoapi.Event) (*app.Event, *app.Location
 			Name:        g.Name,
 			GroupSize:   g.GroupSize,
 			Coordinates: g.Coordinates,
+			Address:     g.Address,
 		}
 		appGuests = append(appGuests, convertedGuest)
 	}

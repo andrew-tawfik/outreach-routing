@@ -1,8 +1,6 @@
 package geoapi
 
 import (
-	"fmt"
-
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
@@ -97,7 +95,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 		}
 
 	}
-	fmt.Println("Retrived all coordinates successfully")
+
 	return nil
 }
 

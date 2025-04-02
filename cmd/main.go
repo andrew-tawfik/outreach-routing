@@ -62,7 +62,5 @@ func main() {
 	RouteManager.StartRouteDispatch()
 
 	// Display Results
-	RouteManager.DisplayResults()
-	appEvent.Display()
-
+	RouteManager.Display(appEvent, lr)
 }
