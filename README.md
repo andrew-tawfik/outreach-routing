@@ -1,7 +1,7 @@
 # Outreach Routing Planner
 
 ## Project Description
-This project is a Go-based command-line tool built to support Anba Abraam Service in planning efficient transportation routes for delivering groceries and transporting guests to dinner events. Designed specifically for the Service's coordinators, it streamlines the entire route dispatching process.
+This project is a Go-based command-line tool built to support Anba Abraam Service in planning efficient transportation routes for delivering groceries and transporting guests from dinner events to their homes. Designed specifically for the Service's coordinators, it streamlines the entire route dispatching process.
 
 The tool integrates with Google Sheets for guest and event data, and leverages external services like Nominatim for geocoding and OSRM for calculating travel distances. 
 
