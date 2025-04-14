@@ -22,7 +22,7 @@ func (v *Vehicle) DisplayVehicleRoute(index int, e *Event, lr *LocationRegistry)
 		}
 		addressesVisited := determineAddressesVisited(nodeVisited)
 		guests := determineGuestsInvolved(addressesVisited, e, lr)
-		fmt.Printf("Vehicle %d: %s ) \n", index, displayGuests(guests))
+		fmt.Printf("Vehicle %d: %s ) \n", index+1, displayGuests(guests))
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/oauth2/google"
@@ -20,11 +21,16 @@ type Database struct {
 // NewSheetClient initializes a Google Sheets client using credentials
 func NewSheetClient(spreadsheetID string) (*Database, error) {
 
-	path := os.Getenv("GOOGLE_CREDENTIALS_PATH")
-
-	data, err := os.ReadFile(path)
+	// Compute path relative to current working dir (cmd/)
+	projectRoot, err := filepath.Abs(filepath.Join(".", ".."))
 	if err != nil {
-		log.Fatalln("cannot read client_secret json file")
+		log.Fatalln("failed to resolve project root:", err)
+	}
+	credentialsPath := filepath.Join(projectRoot, "client_secret.json")
+
+	data, err := os.ReadFile(credentialsPath)
+	if err != nil {
+		log.Fatalf("cannot read %s: %v", credentialsPath, err)
 	}
 
 	// Create a JWT-based authenticated client using the provided credentials
