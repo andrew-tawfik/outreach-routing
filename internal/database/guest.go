@@ -37,6 +37,9 @@ func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 	address := (*row)[4].Value
 	validGuest := true
 
+	if count == "" {
+		count = "0"
+	}
 	// Convert group size to integer and ensure it's > 0
 	iCount, err := strconv.Atoi(count)
 	if err != nil {
