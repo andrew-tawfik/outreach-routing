@@ -13,6 +13,7 @@ type config struct {
 	InfoLog    *log.Logger
 	ErrorLog   *log.Logger
 	MainWindow fyne.Window
+	rp         *RoutingProcess
 }
 
 var myApp config

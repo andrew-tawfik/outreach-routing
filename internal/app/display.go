@@ -4,7 +4,10 @@ import (
 	"fmt"
 )
 
-func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) {
+func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) string {
+	displayInformation := ""
+
+	// TODO make this function return a string of the answer
 	space(4)
 	fmt.Println("Guest Dropoff Summary")
 	fmt.Println("============================")
@@ -12,6 +15,7 @@ func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) {
 	for i, v := range rm.Vehicles {
 		v.DisplayVehicleRoute(i, e, lr)
 	}
+	return displayInformation
 }
 
 func (v *Vehicle) DisplayVehicleRoute(index int, e *Event, lr *LocationRegistry) {

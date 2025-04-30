@@ -1,20 +1,26 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"log"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
 	"github.com/andrew-tawfik/outreach-routing/internal/database"
 )
 
-func tui() {
+type RoutingProcess struct {
+	rm *app.RouteManager
+	ae *app.Event
+	lr *app.LocationRegistry
+}
 
-	// Prompt user for the Google Sheet URL that contains event and guest information
-	fmt.Println("Please provide Google SheetURL")
+func ProcessEvent(googleSheetURL string) *RoutingProcess {
 
-	var googleSheetURL string
-	fmt.Scanln(&googleSheetURL)
+	// // Prompt user for the Google Sheet URL that contains event and guest information
+	// fmt.Println("Please provide Google SheetURL")
+
+	// var googleSheetURL string
+	// fmt.Scanln(&googleSheetURL)
 
 	// Extract the spreadsheet ID from the provided URL
 	spreadsheetID, err := database.ExtractIDFromURL(googleSheetURL)
@@ -62,6 +68,16 @@ func tui() {
 	// Start Route Dispatch Algorithm
 	RouteManager.StartRouteDispatch()
 
-	// Display Results
-	RouteManager.Display(appEvent, lr)
+	// // Display Results
+	// RouteManager.Display(appEvent, lr)
+
+	return &RoutingProcess{
+		rm: RouteManager,
+		ae: appEvent,
+		lr: lr,
+	}
+}
+
+func (rp RoutingProcess) String() string {
+	return rp.rm.Display(rp.ae, rp.lr)
 }
