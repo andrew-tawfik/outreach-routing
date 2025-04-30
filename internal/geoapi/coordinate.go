@@ -12,7 +12,7 @@ import (
 )
 
 // httpClient is a shared HTTP client with timeout, reused for all geocoding requests.
-var httpClient = &http.Client{Timeout: 10 * time.Second}
+var httpClient = &http.Client{Timeout: 20 * time.Second}
 
 // retreiveAddressCoordinate takes a raw address string, sends a geocode request to Nominatim,
 // and returns the best-matched geographic coordinates (longitude, latitude).

@@ -19,9 +19,14 @@ func (app *config) makeUI() {
 	urlEntry := widget.NewEntry()
 	urlEntry.SetPlaceHolder("https://docs.google.com/spreadsheets/d/...")
 
+	outputEntry := widget.NewMultiLineEntry()
+	outputEntry.SetText("…your output here…")
+	outputEntry.Wrapping = fyne.TextWrapWord
+
 	runButton := widget.NewButton("Run", func() {
 		// TODO: Add functionality to fetch and parse Google Sheet
 		myApp.rp = ProcessEvent(urlEntry.Text)
+		outputEntry.SetText(myApp.rp.String())
 	})
 	runButton.Importance = widget.HighImportance
 
@@ -47,9 +52,7 @@ func (app *config) makeUI() {
 		resetButton,
 	)
 
-	outputEntry := widget.NewMultiLineEntry()
-	outputEntry.SetText("…your output here…")
-	outputEntry.Wrapping = fyne.TextWrapWord
+	// when run button is pressed SetTheText to myApp.rp.rm.Display()
 
 	outputScrollContainer := container.NewScroll(outputEntry)
 	outputScrollContainer.SetMinSize(fyne.Size{Width: 350, Height: 120})

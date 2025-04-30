@@ -56,7 +56,7 @@ func fetchDistanceMatrix(url *string) ([]byte, error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "outreach-routing/1.0")
+	// req.Header.Set("User-Agent", "outreach-routing/1.0")
 
 	resp, err := sendWithRetry(req)
 	if err != nil {

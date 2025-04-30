@@ -2,23 +2,25 @@ package app
 
 import (
 	"fmt"
+	"strings"
 )
 
 func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) string {
-	displayInformation := ""
+	var b strings.Builder
 
-	// TODO make this function return a string of the answer
-	space(4)
-	fmt.Println("Guest Dropoff Summary")
-	fmt.Println("============================")
-	space(1)
+	b.WriteString("Guest Dropoff Summary\n")
+	b.WriteString("============================\n\n")
+
 	for i, v := range rm.Vehicles {
-		v.DisplayVehicleRoute(i, e, lr)
+		vehicleInfo := v.GetVehicleRouteInfo(i, e, lr)
+		b.WriteString(vehicleInfo)
+		b.WriteString("\n")
 	}
-	return displayInformation
+
+	return b.String()
 }
 
-func (v *Vehicle) DisplayVehicleRoute(index int, e *Event, lr *LocationRegistry) {
+func (v *Vehicle) GetVehicleRouteInfo(index int, e *Event, lr *LocationRegistry) string {
 	nodeVisited := make([]int, 0)
 	if v.Route.List != nil {
 		for elem := v.Route.List.Front(); elem != nil; elem = elem.Next() {
@@ -26,10 +28,12 @@ func (v *Vehicle) DisplayVehicleRoute(index int, e *Event, lr *LocationRegistry)
 		}
 		addressesVisited := determineAddressesVisited(nodeVisited)
 		guests := determineGuestsInvolved(addressesVisited, e, lr)
-		fmt.Printf("Vehicle %d: %s ) \n", index+1, displayGuests(guests))
+		return fmt.Sprintf("Vehicle %d: %s", index+1, displayGuests(guests))
 	}
+	return fmt.Sprintf("Vehicle %d: No guests", index+1)
 }
 
+// Keeping the existing helper functions unchanged
 func determineGuestsInvolved(addressesVisited []string, e *Event, lr *LocationRegistry) []Guest {
 	guestsInvolved := make([]Guest, 0)
 	for _, v := range addressesVisited {
@@ -44,7 +48,6 @@ func determineGuestsInvolved(addressesVisited []string, e *Event, lr *LocationRe
 }
 
 func determineAddressesVisited(nodeVisited []int) []string {
-
 	addressesVisited := make([]string, 0)
 	for _, val := range nodeVisited {
 		addressesVisited = append(addressesVisited, addressOrder[val])
@@ -64,10 +67,4 @@ func displayGuests(guests []Guest) string {
 		}
 	}
 	return str
-}
-
-func space(lines int) {
-	for range lines {
-		fmt.Println()
-	}
 }
