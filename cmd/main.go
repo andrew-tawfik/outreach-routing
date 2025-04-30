@@ -1,66 +1,35 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
 
-	"github.com/andrew-tawfik/outreach-routing/internal/app"
-	"github.com/andrew-tawfik/outreach-routing/internal/database"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
 )
 
+type config struct {
+	App        fyne.App
+	InfoLog    *log.Logger
+	ErrorLog   *log.Logger
+	MainWindow fyne.Window
+}
+
+var myApp config
+
 func main() {
-	// Prompt user for the Google Sheet URL that contains event and guest information
-	fmt.Println("Please provide Google SheetURL")
 
-	var googleSheetURL string
-	fmt.Scanln(&googleSheetURL)
+	//create a fyne application
+	a := app.New()
+	myApp.App = a
 
-	// Extract the spreadsheet ID from the provided URL
-	spreadsheetID, err := database.ExtractIDFromURL(googleSheetURL)
+	// create loggers
+	myApp.InfoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	myApp.ErrorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	if err != nil {
-		log.Fatalf("error extracting ID: %v", err)
-	}
+	myApp.MainWindow = a.NewWindow("Anba Abraam Service")
+	myApp.MainWindow.Resize(fyne.Size{Width: 1200, Height: 700})
+	myApp.MainWindow.SetMaster()
 
-	// Initialize Google Sheets client
-	db, err := database.NewSheetClient(spreadsheetID)
-	if err != nil {
-		log.Fatalf("could not initialize sheet client: %v", err)
-	}
-
-	// Parse event and guest data from the sheet
-	event, err := db.ProcessEvent()
-	if err != nil {
-		log.Fatalf("Could not process event: %v", err)
-	}
-
-	// Map database event to geo event structure for coordinate lookup
-	geoEvent := mapDatabaseEventToHttp(event)
-
-	// Filter guests who require transportation service (ie Confirmed or GroceryOnly)
-	geoEvent.FilterGuestForService()
-
-	// Request GPS coordinates for all guest addresses
-	geoEvent.RequestGuestCoordiantes()
-
-	// Request distance matrix for all coordinates
-	geoEvent.RetreiveDistanceMatrix()
-
-	// Map geo-level data to app-level event and location registry
-	appEvent, lr := mapDatabaseGeoEventToApp(geoEvent)
-
-	// Set vehicle count
-	vehicleCount := 8
-
-	// Initialize the route manager
-	RouteManager := app.CreateRouteManager(lr, vehicleCount)
-
-	// Determine savings between guest pairings using Clarke-Wright Algorithm
-	RouteManager.DetermineSavingList(lr)
-
-	// Start Route Dispatch Algorithm
-	RouteManager.StartRouteDispatch()
-
-	// Display Results
-	RouteManager.Display(appEvent, lr)
+	myApp.MainWindow.ShowAndRun()
 }
