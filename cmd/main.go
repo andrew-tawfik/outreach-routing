@@ -31,5 +31,7 @@ func main() {
 	myApp.MainWindow.Resize(fyne.Size{Width: 1200, Height: 700})
 	myApp.MainWindow.SetMaster()
 
+	myApp.makeUI()
+
 	myApp.MainWindow.ShowAndRun()
 }
