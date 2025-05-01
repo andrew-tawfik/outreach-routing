@@ -1,6 +1,7 @@
 package geoapi
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
@@ -100,6 +101,8 @@ func (e *Event) RequestGuestCoordiantes() {
 		coor, unique := e.isUnique(i)
 		if unique {
 			addToCoordListString(&coor)
+		} else {
+			fmt.Printf("%s is not unique. ", e.Guests[i].Address)
 		}
 
 	}
