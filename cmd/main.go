@@ -6,33 +6,30 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
 )
 
 type config struct {
-	App        fyne.App
-	InfoLog    *log.Logger
-	ErrorLog   *log.Logger
-	MainWindow fyne.Window
-	rp         *RoutingProcess
+	App            fyne.App
+	InfoLog        *log.Logger
+	ErrorLog       *log.Logger
+	MainWindow     fyne.Window
+	rp             *RoutingProcess
+	vehicleSection *fyne.Container
 }
 
-var myApp config
-
 func main() {
-
-	//create a fyne application
 	a := app.New()
-	myApp.App = a
+	cfg := &config{
+		App:        a,
+		InfoLog:    log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		ErrorLog:   log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		MainWindow: a.NewWindow("Anba Abraam Service"),
+	}
 
-	// create loggers
-	myApp.InfoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	myApp.ErrorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-
-	myApp.MainWindow = a.NewWindow("Anba Abraam Service")
-	myApp.MainWindow.Resize(fyne.Size{Width: 1200, Height: 700})
-	myApp.MainWindow.SetMaster()
-
-	myApp.makeUI()
-
-	myApp.MainWindow.ShowAndRun()
+	cfg.vehicleSection = container.NewStack()
+	cfg.MainWindow.Resize(fyne.NewSize(1200, 700))
+	cfg.MainWindow.SetMaster()
+	cfg.makeUI()
+	cfg.MainWindow.ShowAndRun()
 }

@@ -15,6 +15,7 @@ type Route struct {
 type Vehicle struct {
 	SeatsRemaining int
 	Route          Route
+	Guests         []Guest
 }
 
 // RouteManager manages the state of all vehicles, routing decisions, and guest assignments.
@@ -33,7 +34,7 @@ var addressOrder []string
 
 // CreateRouteManager initializes a RouteManager instance from a LocationRegistry and
 // number of available vehicles. It sets up guest counts, initializes vehicles, and prepares the savings heap.
-func CreateRouteManager(lr *LocationRegistry, numVehicles int) *RouteManager {
+func CreateRouteManager(lr *LocationRegistry) *RouteManager {
 
 	ao := &lr.CoordianteMap.AddressOrder
 	destinationCount := &lr.CoordianteMap.DestinationOccupancy
@@ -50,7 +51,7 @@ func CreateRouteManager(lr *LocationRegistry, numVehicles int) *RouteManager {
 	}
 
 	// Create vehicles and initialize the savings heap
-	vehicles := createVehicles(numVehicles)
+	vehicles := make([]Vehicle, 0, 10)
 	savings := &savingsList{}
 	heap.Init(savings)
 
@@ -65,13 +66,7 @@ func CreateRouteManager(lr *LocationRegistry, numVehicles int) *RouteManager {
 }
 
 // createVehicles returns a slice of Vehicles, each initialized with max seats and an empty route.
-func createVehicles(numVehicles int) []Vehicle {
-	v := Vehicle{SeatsRemaining: maxVehicleSeats}
-	vehicles := make([]Vehicle, 0, numVehicles)
-	i := 0
-	for i < numVehicles {
-		vehicles = append(vehicles, v)
-		i++
-	}
-	return vehicles
+func (rm *RouteManager) addNewVehicle() {
+	newVehicle := Vehicle{SeatsRemaining: maxVehicleSeats}
+	rm.Vehicles = append(rm.Vehicles, newVehicle)
 }

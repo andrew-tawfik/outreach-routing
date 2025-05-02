@@ -11,7 +11,8 @@ func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) string {
 	b.WriteString("Guest Dropoff Summary\n")
 	b.WriteString("============================\n\n")
 
-	for i, v := range rm.Vehicles {
+	for i := range rm.Vehicles {
+		v := &rm.Vehicles[i] // take pointer into slice
 		vehicleInfo := v.GetVehicleRouteInfo(i, e, lr)
 		b.WriteString(vehicleInfo)
 		b.WriteString("\n")
@@ -21,50 +22,55 @@ func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) string {
 }
 
 func (v *Vehicle) GetVehicleRouteInfo(index int, e *Event, lr *LocationRegistry) string {
-	nodeVisited := make([]int, 0)
-	if v.Route.List != nil {
-		for elem := v.Route.List.Front(); elem != nil; elem = elem.Next() {
-			nodeVisited = append(nodeVisited, elem.Value.(int))
-		}
-		addressesVisited := determineAddressesVisited(nodeVisited)
-		guests := determineGuestsInvolved(addressesVisited, e, lr)
-		return fmt.Sprintf("Vehicle %d: %s", index+1, displayGuests(guests))
+	if v.Route.List == nil {
+		return fmt.Sprintf("Vehicle %d: No guests", index+1)
 	}
-	return fmt.Sprintf("Vehicle %d: No guests", index+1)
+
+	// build the list of node IDs this vehicle visits
+	var nodeVisited []int
+	for elem := v.Route.List.Front(); elem != nil; elem = elem.Next() {
+		nodeVisited = append(nodeVisited, elem.Value.(int))
+	}
+
+	addresses := determineAddressesVisited(nodeVisited)
+
+	// this mutates v.Guests on the real slice element
+	v.determineGuestsInvolved(addresses, e, lr)
+
+	return fmt.Sprintf("Vehicle %d: %s", index+1, displayGuests(v.Guests))
 }
 
-// Keeping the existing helper functions unchanged
-func determineGuestsInvolved(addressesVisited []string, e *Event, lr *LocationRegistry) []Guest {
-	guestsInvolved := make([]Guest, 0)
-	for _, v := range addressesVisited {
-		coor := lr.CoordianteMap.CoordinateToAddress[v]
+func (v *Vehicle) determineGuestsInvolved(addresses []string, e *Event, lr *LocationRegistry) {
+	var guestsInvolved []Guest
+	for _, addr := range addresses {
+		coord := lr.CoordianteMap.CoordinateToAddress[addr] // fixed typo
 		for _, g := range e.Guests {
-			if g.Coordinates.Long == coor.Long && g.Coordinates.Lat == coor.Lat {
+			if g.Coordinates.Long == coord.Long && g.Coordinates.Lat == coord.Lat {
 				guestsInvolved = append(guestsInvolved, g)
 			}
 		}
 	}
-	return guestsInvolved
+	v.Guests = guestsInvolved
 }
 
 func determineAddressesVisited(nodeVisited []int) []string {
-	addressesVisited := make([]string, 0)
-	for _, val := range nodeVisited {
-		addressesVisited = append(addressesVisited, addressOrder[val])
+	result := make([]string, 0, len(nodeVisited))
+	for _, idx := range nodeVisited {
+		result = append(result, addressOrder[idx])
 	}
-	return addressesVisited
+	return result
 }
 
 func displayGuests(guests []Guest) string {
 	if len(guests) == 0 {
 		return "No guests"
 	}
-	str := ""
+	var sb strings.Builder
 	for i, g := range guests {
-		str += fmt.Sprintf("%s (%s)", g.Name, g.Address)
-		if i != len(guests)-1 {
-			str += ", "
+		sb.WriteString(fmt.Sprintf("%s (%s)", g.Name, g.Address))
+		if i < len(guests)-1 {
+			sb.WriteString(", ")
 		}
 	}
-	return str
+	return sb.String()
 }

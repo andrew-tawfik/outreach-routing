@@ -56,11 +56,8 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 	// Map geo-level data to app-level event and location registry
 	appEvent, lr := mapDatabaseGeoEventToApp(geoEvent)
 
-	// Set vehicle count
-	vehicleCount := 8
-
 	// Initialize the route manager
-	RouteManager := app.CreateRouteManager(lr, vehicleCount)
+	RouteManager := app.CreateRouteManager(lr)
 
 	// Determine savings between guest pairings using Clarke-Wright Algorithm
 	RouteManager.DetermineSavingList(lr)
@@ -78,6 +75,6 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 	}
 }
 
-func (rp RoutingProcess) String() string {
+func (rp *RoutingProcess) String() string {
 	return rp.rm.Display(rp.ae, rp.lr)
 }

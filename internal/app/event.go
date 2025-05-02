@@ -33,4 +33,5 @@ type Guest struct {
 	GroupSize   int
 	Coordinates coordinates.GuestCoordinates
 	Address     string
+	PhoneNumber string
 }

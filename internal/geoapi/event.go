@@ -26,6 +26,7 @@ type Guest struct {
 	GroupSize   int
 	Address     string
 	Coordinates coordinates.GuestCoordinates
+	PhoneNumber string
 }
 
 // Event represents either Dinner or Grocery Run holding Guest and Address information

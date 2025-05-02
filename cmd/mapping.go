@@ -14,10 +14,11 @@ func mapDatabaseEventToHttp(dbEvent *database.Event) *geoapi.Event {
 
 	for _, g := range (*dbEvent).Guests {
 		convertedGuest := geoapi.Guest{
-			Status:    geoapi.GuestStatus(g.Status),
-			Name:      g.Name,
-			GroupSize: g.GroupSize,
-			Address:   g.Address,
+			Status:      geoapi.GuestStatus(g.Status),
+			Name:        g.Name,
+			GroupSize:   g.GroupSize,
+			Address:     g.Address,
+			PhoneNumber: g.PhoneNumber,
 		}
 		httpGuests = append(httpGuests, convertedGuest)
 	}
@@ -38,6 +39,7 @@ func mapDatabaseGeoEventToApp(geoEvent *geoapi.Event) (*app.Event, *app.Location
 			GroupSize:   g.GroupSize,
 			Coordinates: g.Coordinates,
 			Address:     g.Address,
+			PhoneNumber: g.PhoneNumber,
 		}
 		appGuests = append(appGuests, convertedGuest)
 	}
