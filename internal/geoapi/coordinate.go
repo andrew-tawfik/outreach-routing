@@ -11,7 +11,7 @@ import (
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
-var httpClient = &http.Client{Timeout: 5 * time.Second}
+var httpClient = &http.Client{Timeout: 30 * time.Second}
 
 // retreiveAddressCoordinate takes a raw address string, sends a geocode request to Nominatim,
 // and returns the best-matched geographic coordinates (longitude, latitude).
@@ -116,9 +116,7 @@ func sendWithRetry(req *http.Request) (*http.Response, error) {
 
 		if resp.StatusCode == http.StatusOK {
 			return resp, nil
-		}
-
-		if resp.StatusCode == http.StatusServiceUnavailable {
+		} else {
 			// Retry after short wait
 			resp.Body.Close()
 			time.Sleep(2 * time.Second)

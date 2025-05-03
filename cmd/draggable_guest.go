@@ -32,6 +32,21 @@ func NewDraggableGuest(g app.Guest, vehicleIndex, index int) *DraggableGuest {
 	return dg
 }
 
+func (dg *DraggableGuest) Dragged(e *fyne.DragEvent) {
+	pos := dg.Position().Add(e.Dragged)
+	dg.Move(pos)
+
+}
+
+func (dg *DraggableGuest) DragEnd() {
+
+}
+
+func isOverlapping(obj1, obj2 fyne.CanvasObject) bool {
+
+	return false
+}
+
 // CreateRenderer hands off all drawing/layout to the card’s own renderer.
 func (d *DraggableGuest) CreateRenderer() fyne.WidgetRenderer {
 	// grab the card’s built-in renderer

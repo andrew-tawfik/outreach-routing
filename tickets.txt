@@ -1,0 +1,4 @@
+1. GUI
+2. Change the Coordinates from (long, lat) -> (lat, long)
+2. OSRM -> Google Maps Route API
+3. Concurency -> Nominatim Geocoding

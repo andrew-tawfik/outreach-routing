@@ -21,14 +21,15 @@ func (cfg *config) createVehicleGrid() fyne.CanvasObject {
 func (cfg *config) makeVehicleCard(v app.Vehicle, idx int) fyne.CanvasObject {
 	cfg.InfoLog.Printf("Vehicle %d has %d guests", idx+1, len(v.Guests))
 	title := fmt.Sprintf("Vehicle %d", idx+1)
-	guestsBox := container.NewVBox()
+	guestsBox := container.NewWithoutLayout()
 	for i, g := range v.Guests {
 		dg := NewDraggableGuest(g, idx, i)
+		dg.Move(fyne.NewPos(0, float32(i*50))) // manually space out guests vertically
 		guestsBox.Add(dg)
 	}
 
 	scroll := container.NewVScroll(guestsBox)
-	scroll.SetMinSize(fyne.NewSize(0, 400))
+	scroll.SetMinSize(fyne.NewSize(0, 250))
 
 	return widget.NewCard(title, "", scroll)
 }
