@@ -10,12 +10,13 @@ import (
 )
 
 type config struct {
-	App            fyne.App
-	InfoLog        *log.Logger
-	ErrorLog       *log.Logger
-	MainWindow     fyne.Window
-	rp             *RoutingProcess
-	vehicleSection *fyne.Container
+	App             fyne.App
+	InfoLog         *log.Logger
+	ErrorLog        *log.Logger
+	MainWindow      fyne.Window
+	rp              *RoutingProcess
+	vehicleSection  *fyne.Container
+	guestContainers []*fyne.Container
 }
 
 func main() {

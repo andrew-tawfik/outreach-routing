@@ -2,87 +2,129 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
 )
 
-// DraggableGuest is a composite widget: it wraps a widget.Card.
 type DraggableGuest struct {
-	widget.BaseWidget   // register as custom widget
-	Guest               app.Guest
-	vehicleIndex, index int
-	card                *widget.Card
+	widget.BaseWidget
+	Guest        app.Guest
+	vehicleIndex int
+	index        int
+	cfg          *config
+
+	label    *widget.Label
+	bg       *canvas.Rectangle
+	selected bool
 }
 
-// NewDraggableGuest creates the widget but does not yet wire up drag logic.
-func NewDraggableGuest(g app.Guest, vehicleIndex, index int) *DraggableGuest {
-	title := fmt.Sprintf("%s (group of %d): %s", g.Name, g.GroupSize, g.Address)
-	card := widget.NewCard("", "", widget.NewLabel(title))
-
-	dg := &DraggableGuest{
+// Factory
+func NewDraggableGuest(g app.Guest, vehicleIndex, index int, cfg *config) *DraggableGuest {
+	d := &DraggableGuest{
 		Guest:        g,
 		vehicleIndex: vehicleIndex,
 		index:        index,
-		card:         card,
+		cfg:          cfg,
+		label: widget.NewLabel(fmt.Sprintf(
+			"%s (Group: %d)\n%s", g.Name, g.GroupSize, g.Address)),
+		bg: canvas.NewRectangle(color.RGBA{R: 200, G: 200, B: 255, A: 255}),
 	}
-	dg.ExtendBaseWidget(dg) // tell Fyne this is a custom widget
-	return dg
+	d.ExtendBaseWidget(d)
+	return d
 }
 
-func (dg *DraggableGuest) Dragged(e *fyne.DragEvent) {
-	pos := dg.Position().Add(e.Dragged)
-	dg.Move(pos)
-
+// Tappable
+func (d *DraggableGuest) Tapped(_ *fyne.PointEvent) {
+	d.selected = !d.selected
+	d.Refresh()
+	fmt.Println("Tapped:", d.Guest.Name)
 }
 
-func (dg *DraggableGuest) DragEnd() {
-
+// Draggable
+func (d *DraggableGuest) Dragged(ev *fyne.DragEvent) {
+	newPos := d.Position().Add(ev.Dragged)
+	d.Move(newPos)
+	canvas.Refresh(d)
 }
 
-func isOverlapping(obj1, obj2 fyne.CanvasObject) bool {
+func (d *DraggableGuest) DragEnd() {
+	for i, c := range d.cfg.guestContainers {
+		if i == d.vehicleIndex {
+			continue
+		}
+		if isOverlapping(d, c) {
+			// Remove guest from current vehicle
+			d.cfg.rp.rm.Vehicles[d.vehicleIndex].Guests =
+				removeGuest(d.cfg.rp.rm.Vehicles[d.vehicleIndex].Guests, d.index)
 
-	return false
+			// Add guest to new vehicle
+			d.cfg.rp.rm.Vehicles[i].Guests = append(d.cfg.rp.rm.Vehicles[i].Guests, d.Guest)
+
+			// Rebuild the vehicle grid
+			d.cfg.vehicleSection.Objects = []fyne.CanvasObject{d.cfg.createVehicleGrid()}
+			d.cfg.vehicleSection.Refresh()
+			return
+		}
+	}
 }
 
-// CreateRenderer hands off all drawing/layout to the card’s own renderer.
 func (d *DraggableGuest) CreateRenderer() fyne.WidgetRenderer {
-	// grab the card’s built-in renderer
-	cardR := d.card.CreateRenderer()
+	d.bg.Hide() // background shown only when selected
 
-	// wrap it so we satisfy fyne.WidgetRenderer
-	return &guestRenderer{
-		guest:        d,
-		card:         d.card,
-		cardRenderer: cardR,
+	objects := []fyne.CanvasObject{
+		d.bg,
+		d.label,
+	}
+	return &draggableGuestRenderer{
+		guest:   d,
+		bg:      d.bg,
+		label:   d.label,
+		objects: objects,
 	}
 }
 
-// guestRenderer simply proxies everything to the card’s renderer.
-type guestRenderer struct {
-	guest        *DraggableGuest
-	card         *widget.Card
-	cardRenderer fyne.WidgetRenderer
+type draggableGuestRenderer struct {
+	guest   *DraggableGuest
+	bg      *canvas.Rectangle
+	label   *widget.Label
+	objects []fyne.CanvasObject
 }
 
-func (r *guestRenderer) Layout(size fyne.Size) {
-	r.cardRenderer.Layout(size)
+func (r *draggableGuestRenderer) Layout(s fyne.Size) {
+	r.bg.Resize(s)
+	r.label.Resize(s)
 }
 
-func (r *guestRenderer) MinSize() fyne.Size {
-	return r.cardRenderer.MinSize()
+func (r *draggableGuestRenderer) MinSize() fyne.Size {
+	return r.label.MinSize()
 }
 
-func (r *guestRenderer) Refresh() {
-	r.cardRenderer.Refresh()
+func (r *draggableGuestRenderer) Refresh() {
+	if r.guest.selected {
+		r.bg.Show()
+	} else {
+		r.bg.Hide()
+	}
+	canvas.Refresh(r.guest)
 }
 
-func (r *guestRenderer) Objects() []fyne.CanvasObject {
-	return r.cardRenderer.Objects()
+func (r *draggableGuestRenderer) Objects() []fyne.CanvasObject {
+	return r.objects
 }
 
-func (r *guestRenderer) Destroy() {
-	r.cardRenderer.Destroy()
+func (r *draggableGuestRenderer) Destroy() {}
+
+func isOverlapping(a, b fyne.CanvasObject) bool {
+	aPos, bPos := a.Position(), b.Position()
+	aEnd, bEnd := aPos.Add(a.Size()), bPos.Add(b.Size())
+	return aPos.X < bEnd.X && aEnd.X > bPos.X && aPos.Y < bEnd.Y && aEnd.Y > bPos.Y
+}
+
+func removeGuest(slice []app.Guest, index int) []app.Guest {
+	return append(slice[:index], slice[index+1:]...)
 }

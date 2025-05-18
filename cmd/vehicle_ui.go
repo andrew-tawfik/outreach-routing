@@ -22,8 +22,9 @@ func (cfg *config) makeVehicleCard(v app.Vehicle, idx int) fyne.CanvasObject {
 	cfg.InfoLog.Printf("Vehicle %d has %d guests", idx+1, len(v.Guests))
 	title := fmt.Sprintf("Vehicle %d", idx+1)
 	guestsBox := container.NewWithoutLayout()
+	cfg.guestContainers = append(cfg.guestContainers, guestsBox)
 	for i, g := range v.Guests {
-		dg := NewDraggableGuest(g, idx, i)
+		dg := NewDraggableGuest(g, idx, i, cfg)
 		dg.Move(fyne.NewPos(0, float32(i*50))) // manually space out guests vertically
 		guestsBox.Add(dg)
 	}
