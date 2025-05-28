@@ -1,10 +1,11 @@
-package main
+package ui
 
 import (
 	//"fmt"
 	"log"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
+	"github.com/andrew-tawfik/outreach-routing/internal/converter"
 	"github.com/andrew-tawfik/outreach-routing/internal/database"
 )
 
@@ -42,7 +43,7 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 	}
 
 	// Map database event to geo event structure for coordinate lookup
-	geoEvent := mapDatabaseEventToHttp(event)
+	geoEvent := converter.MapDatabaseEventToHttp(event)
 
 	// Filter guests who require transportation service (ie Confirmed or GroceryOnly)
 	geoEvent.FilterGuestForService()
@@ -54,7 +55,7 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 	geoEvent.RetreiveDistanceMatrix()
 
 	// Map geo-level data to app-level event and location registry
-	appEvent, lr := mapDatabaseGeoEventToApp(geoEvent)
+	appEvent, lr := converter.MapDatabaseGeoEventToApp(geoEvent)
 
 	// Initialize the route manager
 	RouteManager := app.CreateRouteManager(lr)

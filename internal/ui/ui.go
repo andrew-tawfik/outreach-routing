@@ -1,4 +1,4 @@
-package main
+package ui
 
 import (
 	"fyne.io/fyne/v2"
@@ -7,7 +7,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func (cfg *config) makeUI() {
+func (cfg *Config) MakeUI() {
 	// ---- Input & Run ----------------------------------------
 	urlTitle := widget.NewLabelWithStyle(
 		"Insert a Google Sheet URL",
@@ -22,12 +22,12 @@ func (cfg *config) makeUI() {
 	outputEntry.Wrapping = fyne.TextWrapWord
 
 	runButton := widget.NewButton("Run", func() {
-		cfg.rp = ProcessEvent(urlEntry.Text)
-		outputEntry.SetText(cfg.rp.String())
+		cfg.Rp = ProcessEvent(urlEntry.Text)
+		outputEntry.SetText(cfg.Rp.String())
 
 		grid := cfg.createVehicleGrid()
-		cfg.vehicleSection.Objects = []fyne.CanvasObject{grid}
-		cfg.vehicleSection.Refresh()
+		cfg.VehicleSection.Objects = []fyne.CanvasObject{grid}
+		cfg.VehicleSection.Refresh()
 	})
 	runButton.Importance = widget.HighImportance
 
@@ -54,7 +54,7 @@ func (cfg *config) makeUI() {
 		nil,                // bottom
 		nil,                // left
 		nil,                // right
-		cfg.vehicleSection, // center
+		cfg.VehicleSection, // center
 	)
 	cfg.MainWindow.SetContent(mainContent)
 }

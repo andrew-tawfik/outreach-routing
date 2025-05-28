@@ -8,7 +8,7 @@ import (
 
 // mapDatabaseEventToHttp converts an Event from the database layer
 // to the format expected by the geoapi layer
-func mapDatabaseEventToHttp(dbEvent *database.Event) *geoapi.Event {
+func MapDatabaseEventToHttp(dbEvent *database.Event) *geoapi.Event {
 	numGuests := len((*dbEvent).Guests)
 	httpGuests := make([]geoapi.Guest, 0, numGuests)
 
@@ -29,7 +29,7 @@ func mapDatabaseEventToHttp(dbEvent *database.Event) *geoapi.Event {
 }
 
 // mapDatabaseGeoEventToApp converts a geoapi.Event into the app layer's Event and LocationRegistry
-func mapDatabaseGeoEventToApp(geoEvent *geoapi.Event) (*app.Event, *app.LocationRegistry) {
+func MapDatabaseGeoEventToApp(geoEvent *geoapi.Event) (*app.Event, *app.LocationRegistry) {
 	numGuests := len(geoEvent.Guests)
 	appGuests := make([]app.Guest, 0, numGuests)
 

@@ -1,4 +1,4 @@
-package main
+package ui
 
 import (
 	"fmt"
@@ -11,12 +11,20 @@ import (
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
 )
 
+type GuestWidget struct {
+	widget.BaseWidget
+
+	guestData   app.Guest
+	isDragging  bool
+	dragManager *dragManager
+}
+
 type DraggableGuest struct {
 	widget.BaseWidget
 	Guest        app.Guest
 	vehicleIndex int
 	index        int
-	cfg          *config
+	cfg          *Config
 
 	label    *widget.Label
 	bg       *canvas.Rectangle
@@ -24,7 +32,7 @@ type DraggableGuest struct {
 }
 
 // Factory
-func NewDraggableGuest(g app.Guest, vehicleIndex, index int, cfg *config) *DraggableGuest {
+func NewDraggableGuest(g app.Guest, vehicleIndex, index int, cfg *Config) *DraggableGuest {
 	d := &DraggableGuest{
 		Guest:        g,
 		vehicleIndex: vehicleIndex,
@@ -38,43 +46,8 @@ func NewDraggableGuest(g app.Guest, vehicleIndex, index int, cfg *config) *Dragg
 	return d
 }
 
-// Tappable
-func (d *DraggableGuest) Tapped(_ *fyne.PointEvent) {
-	d.selected = !d.selected
-	d.Refresh()
-	fmt.Println("Tapped:", d.Guest.Name)
-}
-
-// Draggable
-func (d *DraggableGuest) Dragged(ev *fyne.DragEvent) {
-	newPos := d.Position().Add(ev.Dragged)
-	d.Move(newPos)
-	canvas.Refresh(d)
-}
-
-func (d *DraggableGuest) DragEnd() {
-	for i, c := range d.cfg.guestContainers {
-		if i == d.vehicleIndex {
-			continue
-		}
-		if isOverlapping(d, c) {
-			// Remove guest from current vehicle
-			d.cfg.rp.rm.Vehicles[d.vehicleIndex].Guests =
-				removeGuest(d.cfg.rp.rm.Vehicles[d.vehicleIndex].Guests, d.index)
-
-			// Add guest to new vehicle
-			d.cfg.rp.rm.Vehicles[i].Guests = append(d.cfg.rp.rm.Vehicles[i].Guests, d.Guest)
-
-			// Rebuild the vehicle grid
-			d.cfg.vehicleSection.Objects = []fyne.CanvasObject{d.cfg.createVehicleGrid()}
-			d.cfg.vehicleSection.Refresh()
-			return
-		}
-	}
-}
-
 func (d *DraggableGuest) CreateRenderer() fyne.WidgetRenderer {
-	d.bg.Hide() // background shown only when selected
+	d.bg.Hide()
 
 	objects := []fyne.CanvasObject{
 		d.bg,
