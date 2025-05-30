@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"image/color"
 
 	"fyne.io/fyne/v2"
@@ -21,15 +22,16 @@ type VehicleGrid struct {
 	vehicleManager *VehicleManager
 
 	// Drag state management
-	dragOverlay   *canvas.Image   // Global overlay for dragging guests
+	dragContainer *fyne.Container // Container for the dragged guest visual
 	draggedGuest  *app.Guest      // Currently dragged guest
 	dragOrigin    VehiclePosition // Where drag started
 	isDragging    bool
 	dropHighlight *canvas.Rectangle // Shows valid drop zones
 
 	// UI containers
-	gridContainer *fyne.Container // The actual grid of vehicle cards
-	mainContainer *fyne.Container // Max container with overlay
+	gridContainer   *fyne.Container // The actual grid of vehicle cards
+	mainContainer   *fyne.Container // Max container with overlay
+	scrollContainer *container.Scroll
 }
 
 // VehiclePosition identifies a specific location in the grid
@@ -47,9 +49,9 @@ func NewVehicleGrid(rm *app.RouteManager, cfg *Config) *VehicleGrid {
 		dropHighlight: canvas.NewRectangle(color.NRGBA{0, 255, 0, 64}),
 	}
 
-	vg.dragOverlay = canvas.NewImageFromResource(nil)
-	vg.dragOverlay.FillMode = canvas.ImageFillContain
-	vg.dragOverlay.Hide()
+	// Create drag container that will show the dragged guest
+	vg.dragContainer = container.NewWithoutLayout()
+	vg.dragContainer.Hide()
 
 	vg.dropHighlight.Hide()
 	vg.dropHighlight.StrokeWidth = 3
@@ -70,47 +72,45 @@ func NewVehicleGrid(rm *app.RouteManager, cfg *Config) *VehicleGrid {
 func (vg *VehicleGrid) CreateRenderer() fyne.WidgetRenderer {
 	vg.gridContainer = vg.createVehicleCards()
 
-	// Create the main container with overlay (similar to chess)
-	vg.mainContainer = container.NewMax(
-		vg.gridContainer,
-		container.NewWithoutLayout(vg.dropHighlight, vg.dragOverlay),
-	)
+	// Create the scrollable content
+	vg.scrollContainer = container.NewScroll(vg.gridContainer)
+	vg.scrollContainer.SetMinSize(fyne.NewSize(900, 500))
 
-	scrollContainer := container.NewScroll(vg.mainContainer)
+	// Create the main container with overlay layer on top
+	vg.mainContainer = container.NewMax(
+		vg.scrollContainer,
+		container.NewWithoutLayout(vg.dropHighlight, vg.dragContainer),
+	)
 
 	return &vehicleGridRenderer{
 		grid:    vg,
-		scroll:  scrollContainer,
-		objects: []fyne.CanvasObject{scrollContainer},
+		objects: []fyne.CanvasObject{vg.mainContainer},
 	}
 }
 
 // vehicleGridRenderer implements fyne.WidgetRenderer for VehicleGrid
 type vehicleGridRenderer struct {
 	grid    *VehicleGrid
-	scroll  *container.Scroll
 	objects []fyne.CanvasObject
 }
 
 func (r *vehicleGridRenderer) Layout(size fyne.Size) {
-	r.scroll.Resize(size)
+	r.grid.mainContainer.Resize(size)
 }
 
 func (r *vehicleGridRenderer) MinSize() fyne.Size {
-	return fyne.NewSize(900, 500) // Minimum size for the vehicle grid
+	return fyne.NewSize(900, 500)
 }
 
 func (r *vehicleGridRenderer) Refresh() {
-	r.scroll.Refresh()
+	r.grid.mainContainer.Refresh()
 }
 
 func (r *vehicleGridRenderer) Objects() []fyne.CanvasObject {
 	return r.objects
 }
 
-func (r *vehicleGridRenderer) Destroy() {
-	// Clean up any resources if needed
-}
+func (r *vehicleGridRenderer) Destroy() {}
 
 // createVehicleCards builds the grid of vehicle cards
 func (vg *VehicleGrid) createVehicleCards() *fyne.Container {
@@ -120,7 +120,7 @@ func (vg *VehicleGrid) createVehicleCards() *fyne.Container {
 		cards = append(cards, vehicleCard.CreateCard())
 	}
 
-	// Use 3 columns instead of 4 for better spacing
+	// Use 3 columns for better spacing
 	return container.NewGridWithColumns(3, cards...)
 }
 
@@ -139,9 +139,12 @@ func (vg *VehicleGrid) StartDrag(guest *app.Guest, origin VehiclePosition, start
 	vg.dragOrigin = origin
 	vg.isDragging = true
 
-	// Set up the drag overlay
-	vg.dragOverlay.Move(startPos)
-	vg.dragOverlay.Show()
+	// Create visual representation of dragged guest
+	vg.createDragVisual(guest)
+
+	// Position it at the start position
+	vg.dragContainer.Move(startPos)
+	vg.dragContainer.Show()
 
 	// Hide the original guest from its tile
 	vg.vehicles[origin.VehicleIndex].HideGuest(origin.TileIndex)
@@ -150,15 +153,40 @@ func (vg *VehicleGrid) StartDrag(guest *app.Guest, origin VehiclePosition, start
 		guest.Name, origin.VehicleIndex, origin.TileIndex)
 }
 
+// createDragVisual creates the visual representation of the dragged guest
+func (vg *VehicleGrid) createDragVisual(guest *app.Guest) {
+	// Create a semi-transparent version of the guest widget
+	background := canvas.NewRectangle(color.NRGBA{70, 130, 180, 200}) // Semi-transparent blue
+	background.CornerRadius = 3
+	background.Resize(fyne.NewSize(190, 40))
+
+	nameLabel := widget.NewLabel(guest.Name + " (" + fmt.Sprintf("%d", guest.GroupSize) + ")")
+	nameLabel.TextStyle = fyne.TextStyle{Bold: true}
+
+	addressLabel := widget.NewLabel(guest.Address)
+	if len(guest.Address) > 20 {
+		addressLabel.SetText(guest.Address[:17] + "...")
+	}
+
+	content := container.NewVBox(nameLabel, addressLabel)
+	visual := container.NewMax(background, container.NewPadded(content))
+	visual.Resize(fyne.NewSize(190, 40))
+
+	// Clear and add the new visual
+	vg.dragContainer.Objects = []fyne.CanvasObject{visual}
+	vg.dragContainer.Refresh()
+}
+
 // UpdateDrag updates the drag position and highlights valid drop zones
 func (vg *VehicleGrid) UpdateDrag(newPos fyne.Position) {
 	if !vg.isDragging {
 		return
 	}
 
-	vg.dragOverlay.Move(newPos)
+	// Move the drag visual to follow the mouse
+	vg.dragContainer.Move(newPos)
 
-	// Calculate which tile is under the mouse and highlight it
+	// Calculate which tile is under the mouse
 	targetPos := vg.positionToTile(newPos)
 	if vg.isValidDropTarget(targetPos) {
 		vg.highlightDropTarget(targetPos)
@@ -188,8 +216,9 @@ func (vg *VehicleGrid) EndDrag(endPos fyne.Position) {
 	// Clean up drag state
 	vg.isDragging = false
 	vg.draggedGuest = nil
-	vg.dragOverlay.Hide()
+	vg.dragContainer.Hide()
 	vg.dropHighlight.Hide()
+	vg.dragContainer.Objects = nil
 
 	// Refresh the entire grid
 	vg.refreshAfterMove()
@@ -197,16 +226,44 @@ func (vg *VehicleGrid) EndDrag(endPos fyne.Position) {
 
 // positionToTile converts screen coordinates to vehicle/tile position
 func (vg *VehicleGrid) positionToTile(pos fyne.Position) VehiclePosition {
-	// This is a simplified implementation - in practice you'd need to
-	// calculate based on actual vehicle card positions and sizes
-	for vIndex, vehicle := range vg.vehicles {
-		for tIndex := range vehicle.tiles {
-			tilePos := vehicle.GetTilePosition(tIndex)
-			tileSize := vehicle.GetTileSize()
+	// Account for scroll offset
+	scrollOffset := vg.scrollContainer.Offset
 
-			if pos.X >= tilePos.X && pos.X <= tilePos.X+tileSize.Width &&
-				pos.Y >= tilePos.Y && pos.Y <= tilePos.Y+tileSize.Height {
-				return VehiclePosition{VehicleIndex: vIndex, TileIndex: tIndex}
+	// Adjust position by scroll offset
+	adjustedPos := fyne.NewPos(pos.X+scrollOffset.X, pos.Y+scrollOffset.Y)
+
+	// Check each vehicle's tiles
+	for vIndex, vehicle := range vg.vehicles {
+		if vehicle.card == nil {
+			continue
+		}
+
+		// Get the card's position in the grid
+		cardPos := vehicle.card.Position()
+		cardSize := vehicle.card.Size()
+
+		// Check if we're within this card
+		if adjustedPos.X >= cardPos.X && adjustedPos.X <= cardPos.X+cardSize.Width &&
+			adjustedPos.Y >= cardPos.Y && adjustedPos.Y <= cardPos.Y+cardSize.Height {
+
+			// Now check which tile within the card
+			for tIndex, tile := range vehicle.tiles {
+				if tile.container == nil {
+					continue
+				}
+
+				// Get tile position relative to card
+				tilePos := tile.container.Position()
+				tileSize := tile.container.Size()
+
+				// Calculate absolute tile position
+				absTileX := cardPos.X + tilePos.X
+				absTileY := cardPos.Y + tilePos.Y
+
+				if adjustedPos.X >= absTileX && adjustedPos.X <= absTileX+tileSize.Width &&
+					adjustedPos.Y >= absTileY && adjustedPos.Y <= absTileY+tileSize.Height {
+					return VehiclePosition{VehicleIndex: vIndex, TileIndex: tIndex}
+				}
 			}
 		}
 	}
@@ -220,6 +277,10 @@ func (vg *VehicleGrid) isValidDropTarget(target VehiclePosition) bool {
 		return false
 	}
 
+	if target.TileIndex < 0 || target.TileIndex >= len(vg.vehicles[target.VehicleIndex].tiles) {
+		return false
+	}
+
 	vehicle := vg.vehicles[target.VehicleIndex]
 
 	// Check if tile is empty and vehicle has capacity
@@ -229,15 +290,37 @@ func (vg *VehicleGrid) isValidDropTarget(target VehiclePosition) bool {
 
 // highlightDropTarget shows visual feedback for valid drop zones
 func (vg *VehicleGrid) highlightDropTarget(target VehiclePosition) {
-	if target.VehicleIndex < 0 {
+	if target.VehicleIndex < 0 || target.VehicleIndex >= len(vg.vehicles) {
 		vg.dropHighlight.Hide()
 		return
 	}
 
-	tilePos := vg.vehicles[target.VehicleIndex].GetTilePosition(target.TileIndex)
-	tileSize := vg.vehicles[target.VehicleIndex].GetTileSize()
+	vehicle := vg.vehicles[target.VehicleIndex]
+	if vehicle.card == nil || target.TileIndex >= len(vehicle.tiles) {
+		vg.dropHighlight.Hide()
+		return
+	}
 
-	vg.dropHighlight.Move(tilePos)
+	tile := vehicle.tiles[target.TileIndex]
+	if tile.container == nil {
+		vg.dropHighlight.Hide()
+		return
+	}
+
+	// Get absolute position of the tile
+	cardPos := vehicle.card.Position()
+	tilePos := tile.container.Position()
+	tileSize := tile.container.Size()
+
+	// Account for scroll offset
+	scrollOffset := vg.scrollContainer.Offset
+
+	absolutePos := fyne.NewPos(
+		cardPos.X+tilePos.X-scrollOffset.X,
+		cardPos.Y+tilePos.Y-scrollOffset.Y,
+	)
+
+	vg.dropHighlight.Move(absolutePos)
 	vg.dropHighlight.Resize(tileSize)
 	vg.dropHighlight.Show()
 }
@@ -252,14 +335,22 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 			sourceVehicle.Guests[:guestIndex],
 			sourceVehicle.Guests[guestIndex+1:]...,
 		)
+		sourceVehicle.SeatsRemaining += vg.draggedGuest.GroupSize
 	}
 
-	// Add guest to target vehicle
+	// Add guest to target vehicle at the specific tile position
 	targetVehicle := &vg.routeManager.Vehicles[to.VehicleIndex]
-	targetVehicle.Guests = append(targetVehicle.Guests, *vg.draggedGuest)
 
-	// Update seat counts
-	sourceVehicle.SeatsRemaining += vg.draggedGuest.GroupSize
+	// Insert at the tile position (but don't exceed current guest count)
+	insertPos := to.TileIndex
+	if insertPos > len(targetVehicle.Guests) {
+		insertPos = len(targetVehicle.Guests)
+	}
+
+	// Insert guest at the specified position
+	targetVehicle.Guests = append(targetVehicle.Guests[:insertPos],
+		append([]app.Guest{*vg.draggedGuest}, targetVehicle.Guests[insertPos:]...)...)
+
 	targetVehicle.SeatsRemaining -= vg.draggedGuest.GroupSize
 }
 

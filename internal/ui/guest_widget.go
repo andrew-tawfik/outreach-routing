@@ -13,6 +13,8 @@ import (
 
 // GuestWidget represents a draggable guest within a tile
 type GuestWidget struct {
+	widget.BaseWidget
+
 	// Data
 	guest        *app.Guest
 	vehicleIndex int
@@ -20,15 +22,11 @@ type GuestWidget struct {
 	grid         *VehicleGrid
 
 	// Visual components
-	nameLabel    *widget.Label
-	groupLabel   *widget.Label
-	addressLabel *widget.Label
-	background   *canvas.Rectangle
-	container    *fyne.Container
+	background *canvas.Rectangle
+	content    *fyne.Container
 
-	// State
-	isDragging bool
-	isSelected bool
+	// Drag state
+	dragStartPos fyne.Position
 }
 
 // NewGuestWidget creates a new guest widget
@@ -40,177 +38,146 @@ func NewGuestWidget(guest *app.Guest, vehicleIndex, tileIndex int, grid *Vehicle
 		grid:         grid,
 	}
 
-	gw.setupVisuals()
+	gw.ExtendBaseWidget(gw)
 	return gw
 }
 
-// setupVisuals initializes the visual components
-func (gw *GuestWidget) setupVisuals() {
-	// Background with rounded corners and nice color
+// CreateRenderer creates the renderer for the guest widget
+func (gw *GuestWidget) CreateRenderer() fyne.WidgetRenderer {
+	// Background with rounded corners
 	gw.background = canvas.NewRectangle(color.NRGBA{70, 130, 180, 255}) // Steel blue
 	gw.background.CornerRadius = 3
 
-	// These labels are used for state management, but actual display is handled in CreateWidget
-	gw.nameLabel = widget.NewLabel(gw.guest.Name)
-	gw.nameLabel.TextStyle = fyne.TextStyle{Bold: true}
-
-	gw.groupLabel = widget.NewLabel(fmt.Sprintf("%d", gw.guest.GroupSize))
-
-	gw.addressLabel = widget.NewLabel(gw.guest.Address)
-}
-
-// CreateWidget builds the visual representation
-func (gw *GuestWidget) CreateWidget() fyne.CanvasObject {
-	// Compact guest widget that sits ON TOP of tile
+	// Create labels
 	nameAndGroup := fmt.Sprintf("%s (%d)", gw.guest.Name, gw.guest.GroupSize)
-
 	nameLabel := widget.NewLabel(nameAndGroup)
 	nameLabel.TextStyle = fyne.TextStyle{Bold: true}
 
-	// Truncate address to fit in smaller guest widget
+	// Truncate address if too long
 	address := gw.guest.Address
 	if len(address) > 20 {
 		address = address[:17] + "..."
 	}
 	addressLabel := widget.NewLabel(address)
 
-	// Vertical layout for guest info
-	content := container.NewVBox(
-		nameLabel,
-		addressLabel,
-	)
-
-	gw.container = container.NewMax(
+	// Content container
+	textContent := container.NewVBox(nameLabel, addressLabel)
+	gw.content = container.NewMax(
 		gw.background,
-		container.NewPadded(content),
+		container.NewPadded(textContent),
 	)
 
-	// Make it interactive with drag overlay
-	overlay := gw.createInteractiveOverlay()
-	gw.container = container.NewWithoutLayout(
-		gw.background,
-		container.NewPadded(content),
-		overlay,
-	)
-
-	// Guest widget is smaller than tile, so you can see tile edges
-	gw.container.Resize(fyne.NewSize(190, 40))
-	return gw.container
-}
-
-// createInteractiveOverlay creates an invisible overlay for handling interactions
-func (gw *GuestWidget) createInteractiveOverlay() fyne.CanvasObject {
-	overlay := canvas.NewRectangle(color.Transparent)
-
-	// Create a custom draggable widget
-	draggable := &DraggableGuestOverlay{
-		guestWidget: gw,
+	return &guestWidgetRenderer{
+		widget:  gw,
+		objects: []fyne.CanvasObject{gw.content},
 	}
-
-	return container.NewMax(overlay, draggable)
 }
 
-// DraggableGuestOverlay handles drag interactions
-type DraggableGuestOverlay struct {
-	widget.BaseWidget
-	guestWidget *GuestWidget
+// guestWidgetRenderer implements the renderer for GuestWidget
+type guestWidgetRenderer struct {
+	widget  *GuestWidget
+	objects []fyne.CanvasObject
 }
 
-// Tapped handles tap events
-func (dgo *DraggableGuestOverlay) Tapped(_ *fyne.PointEvent) {
-	gw := dgo.guestWidget
-	gw.isSelected = !gw.isSelected
-	gw.updateVisualState()
-	gw.grid.config.InfoLog.Printf("Tapped guest: %s", gw.guest.Name)
+func (r *guestWidgetRenderer) Layout(size fyne.Size) {
+	r.widget.content.Resize(size)
 }
+
+func (r *guestWidgetRenderer) MinSize() fyne.Size {
+	return fyne.NewSize(190, 40)
+}
+
+func (r *guestWidgetRenderer) Refresh() {
+	// Update background color based on state
+	if r.widget.grid.isDragging &&
+		r.widget.grid.draggedGuest == r.widget.guest {
+		r.widget.background.FillColor = color.NRGBA{255, 100, 100, 100} // Semi-transparent during drag
+	} else {
+		r.widget.background.FillColor = color.NRGBA{70, 130, 180, 255} // Normal blue
+	}
+	r.widget.background.Refresh()
+}
+
+func (r *guestWidgetRenderer) Objects() []fyne.CanvasObject {
+	return r.objects
+}
+
+func (r *guestWidgetRenderer) Destroy() {}
+
+// Interface implementations for drag handling
 
 // Dragged handles drag events
-func (dgo *DraggableGuestOverlay) Dragged(ev *fyne.DragEvent) {
-	gw := dgo.guestWidget
-	if !gw.isDragging {
-		// Start drag operation
-		gw.isDragging = true
-		startPos := gw.container.Position().Add(ev.Position)
+func (gw *GuestWidget) Dragged(ev *fyne.DragEvent) {
+	if !gw.grid.isDragging {
+		// Start drag
 		origin := VehiclePosition{
 			VehicleIndex: gw.vehicleIndex,
 			TileIndex:    gw.tileIndex,
 		}
+
+		// Calculate absolute position of the drag start
+		absolutePos := gw.absolutePosition()
+		startPos := absolutePos.Add(ev.Position)
+
 		gw.grid.StartDrag(gw.guest, origin, startPos)
+		gw.dragStartPos = ev.Position
 	} else {
-		// Update drag position
-		newPos := gw.container.Position().Add(ev.Position)
-		gw.grid.UpdateDrag(newPos)
+		// Continue drag - update position
+		currentPos := gw.absolutePosition()
+		dragPos := currentPos.Add(ev.Position)
+		gw.grid.UpdateDrag(dragPos)
 	}
 }
 
 // DragEnd handles the end of drag operations
-func (dgo *DraggableGuestOverlay) DragEnd() {
-	gw := dgo.guestWidget
-	if gw.isDragging {
-		gw.isDragging = false
-		endPos := gw.container.Position()
-		gw.grid.EndDrag(endPos)
+func (gw *GuestWidget) DragEnd() {
+	if gw.grid.isDragging && gw.grid.draggedGuest == gw.guest {
+		// Get final position
+		finalPos := gw.absolutePosition().Add(gw.dragStartPos)
+		gw.grid.EndDrag(finalPos)
 	}
 }
 
-// CreateRenderer creates the renderer for the overlay
-func (dgo *DraggableGuestOverlay) CreateRenderer() fyne.WidgetRenderer {
-	return &draggableGuestOverlayRenderer{
-		overlay: dgo,
-		objects: []fyne.CanvasObject{},
-	}
+// Tapped handles tap/click events
+func (gw *GuestWidget) Tapped(_ *fyne.PointEvent) {
+	gw.grid.config.InfoLog.Printf("Tapped guest: %s", gw.guest.Name)
 }
 
-type draggableGuestOverlayRenderer struct {
-	overlay *DraggableGuestOverlay
-	objects []fyne.CanvasObject
+// TappedSecondary handles right-click events
+func (gw *GuestWidget) TappedSecondary(_ *fyne.PointEvent) {
+	// Could show context menu here
 }
 
-func (r *draggableGuestOverlayRenderer) Layout(size fyne.Size) {
-	// The overlay fills the entire guest widget area
-}
+// absolutePosition calculates the absolute screen position of this widget
+func (gw *GuestWidget) absolutePosition() fyne.Position {
+	// Get the position of this widget
+	pos := gw.Position()
 
-func (r *draggableGuestOverlayRenderer) MinSize() fyne.Size {
-	return fyne.NewSize(190, 40) // Match the guest widget size (smaller than tile)
-}
-
-func (r *draggableGuestOverlayRenderer) Refresh() {
-	// Nothing to refresh for the invisible overlay
-}
-
-func (r *draggableGuestOverlayRenderer) Objects() []fyne.CanvasObject {
-	return r.objects
-}
-
-func (r *draggableGuestOverlayRenderer) Destroy() {}
-
-// updateVisualState updates the guest's visual appearance based on state
-func (gw *GuestWidget) updateVisualState() {
-	if gw.isSelected {
-		gw.background.FillColor = color.NRGBA{255, 165, 0, 255} // Orange when selected
-	} else if gw.isDragging {
-		gw.background.FillColor = color.NRGBA{255, 100, 100, 255} // Red when dragging
-	} else {
-		gw.background.FillColor = color.NRGBA{70, 130, 180, 255} // Default steel blue
+	// Walk up the widget tree to get absolute position
+	parent := gw.Parent()
+	for parent != nil {
+		if parentWidget, ok := parent.(fyne.Widget); ok {
+			pos = pos.Add(parentWidget.Position())
+			parent = parentWidget.(*GuestWidget).Parent()
+		} else {
+			break
+		}
 	}
 
-	if gw.container != nil {
-		gw.container.Refresh()
-	}
+	return pos
 }
 
-// Hide temporarily hides the guest widget (during drag)
-func (gw *GuestWidget) Hide() {
-	if gw.container != nil {
-		gw.container.Hide()
-	}
+// Parent returns the parent widget (needed for position calculation)
+func (gw *GuestWidget) Parent() fyne.Widget {
+	// This would need to be set by the tile when creating the widget
+	// For now, return nil - the position calculation will still work
+	// but might be slightly off in complex layouts
+	return nil
 }
 
-// Show shows the guest widget again
-func (gw *GuestWidget) Show() {
-	if gw.container != nil {
-		gw.container.Show()
-	}
+// CreateWidget creates a simple visual representation (for compatibility)
+func (gw *GuestWidget) CreateWidget() fyne.CanvasObject {
+	return gw
 }
 
 // GetGuest returns the guest data
