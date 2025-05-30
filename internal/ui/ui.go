@@ -25,8 +25,8 @@ func (cfg *Config) MakeUI() {
 		cfg.Rp = ProcessEvent(urlEntry.Text)
 		outputEntry.SetText(cfg.Rp.String())
 
-		grid := cfg.createVehicleGrid()
-		cfg.VehicleSection.Objects = []fyne.CanvasObject{grid}
+		vehicleGrid := NewVehicleGrid(cfg.Rp.rm, cfg)
+		cfg.VehicleSection.Objects = []fyne.CanvasObject{vehicleGrid}
 		cfg.VehicleSection.Refresh()
 	})
 	runButton.Importance = widget.HighImportance
