@@ -224,6 +224,7 @@ func (vg *VehicleGrid) EndDrag(globalPos fyne.Position) {
 			// Flash red on the invalid target
 			tile := vg.vehicles[targetPos.VehicleIndex].tiles[targetPos.TileIndex]
 			tile.HighlightAsInvalidTarget()
+			vg.config.InfoLog.Printf("HERE INVALID")
 
 			// Remove red after a short delay
 			time.AfterFunc(500*time.Millisecond, func() {
@@ -399,6 +400,11 @@ func (vg *VehicleGrid) findGuestIndex(vehicle *app.Vehicle, guest *app.Guest) in
 
 // refreshAfterMove rebuilds the UI after a successful move
 func (vg *VehicleGrid) refreshAfterMove() {
+	// Clean up any remaining highlights BEFORE refreshing
+	for _, vehicle := range vg.vehicles {
+		vehicle.RemoveAllHighlights()
+	}
+
 	// Refresh all vehicle cards to reflect new state
 	for i := range vg.vehicles {
 		vg.vehicles[i].RefreshTiles()
