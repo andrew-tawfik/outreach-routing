@@ -16,6 +16,7 @@ type GuestTile struct {
 	vehicleIndex int
 	tileIndex    int
 	grid         *VehicleGrid
+	card         *VehicleCard // Reference to parent card
 
 	// Content
 	guest       *app.Guest
@@ -33,11 +34,12 @@ type GuestTile struct {
 }
 
 // NewGuestTile creates a new guest tile
-func NewGuestTile(vehicleIndex, tileIndex int, grid *VehicleGrid) *GuestTile {
+func NewGuestTile(vehicleIndex, tileIndex int, grid *VehicleGrid, card *VehicleCard) *GuestTile {
 	tile := &GuestTile{
 		vehicleIndex: vehicleIndex,
 		tileIndex:    tileIndex,
 		grid:         grid,
+		card:         card,
 		isEmpty:      true,
 	}
 
@@ -48,18 +50,18 @@ func NewGuestTile(vehicleIndex, tileIndex int, grid *VehicleGrid) *GuestTile {
 // setupVisuals initializes the visual components
 func (gt *GuestTile) setupVisuals() {
 	// Tile background - distinct color so you can see tile boundaries
-	gt.background = canvas.NewRectangle(color.NRGBA{230, 230, 230, 255}) // Light gray
+	gt.background = canvas.NewRectangle(color.NRGBA{240, 240, 240, 255}) // Light gray
 	gt.background.CornerRadius = 5
 
 	// Prominent border so tiles are clearly visible
 	gt.border = canvas.NewRectangle(color.Transparent)
-	gt.border.StrokeColor = color.NRGBA{150, 150, 150, 255} // Darker gray border
-	gt.border.StrokeWidth = 2                               // Thicker border
+	gt.border.StrokeColor = color.NRGBA{200, 200, 200, 255} // Light border
+	gt.border.StrokeWidth = 2
 	gt.border.FillColor = color.Transparent
 	gt.border.CornerRadius = 5
 
 	// Placeholder text for empty tiles
-	gt.placeholder = widget.NewLabel("Drop guest here")
+	gt.placeholder = widget.NewLabel("Empty slot")
 	gt.placeholder.Alignment = fyne.TextAlignCenter
 	gt.placeholder.TextStyle = fyne.TextStyle{Italic: true}
 }
@@ -75,14 +77,14 @@ func (gt *GuestTile) CreateTile() fyne.CanvasObject {
 		baseObjects = append(baseObjects, placeholderContainer)
 	} else {
 		// Tile with guest - create and add guest widget
-		gt.guestWidget = NewGuestWidget(gt.guest, gt.vehicleIndex, gt.tileIndex, gt.grid)
+		gt.guestWidget = NewGuestWidget(gt.guest, gt.vehicleIndex, gt.tileIndex, gt.grid, gt)
 		// Center the guest widget in the tile with some padding
 		guestContainer := container.NewPadded(gt.guestWidget)
 		baseObjects = append(baseObjects, guestContainer)
 	}
 
 	gt.container = container.NewMax(baseObjects...)
-	gt.container.Resize(fyne.NewSize(220, 60)) // Slightly taller to accommodate padding
+	gt.container.Resize(fyne.NewSize(220, 60))
 	return gt.container
 }
 
@@ -91,6 +93,11 @@ func (gt *GuestTile) SetGuest(guest *app.Guest) {
 	gt.guest = guest
 	gt.isEmpty = false
 	gt.isHidden = false
+
+	if gt.guestWidget != nil {
+		gt.guestWidget.vehicleIndex = gt.vehicleIndex
+		gt.guestWidget.tileIndex = gt.tileIndex
+	}
 
 	// Update the container
 	gt.refreshContainer()
@@ -139,7 +146,7 @@ func (gt *GuestTile) refreshContainer() {
 	} else {
 		// Show guest widget
 		if gt.guestWidget == nil {
-			gt.guestWidget = NewGuestWidget(gt.guest, gt.vehicleIndex, gt.tileIndex, gt.grid)
+			gt.guestWidget = NewGuestWidget(gt.guest, gt.vehicleIndex, gt.tileIndex, gt.grid, gt)
 		}
 		guestContainer := container.NewPadded(gt.guestWidget)
 		objects = append(objects, guestContainer)
@@ -158,20 +165,55 @@ func (gt *GuestTile) GetPosition() VehiclePosition {
 	}
 }
 
+// ContainsPosition checks if a given position is within this tile
+func (gt *GuestTile) ContainsPosition(pos fyne.Position) bool {
+	if gt.container == nil || gt.card == nil || gt.card.card == nil {
+		return false
+	}
+
+	// Get the card's position
+	cardPos := gt.card.card.Position()
+
+	// Get the tile's position relative to the card
+	tilePos := gt.container.Position()
+	tileSize := gt.container.Size()
+
+	// Calculate absolute position
+	absX := cardPos.X + tilePos.X
+	absY := cardPos.Y + tilePos.Y
+
+	// Check if position is within bounds
+	return pos.X >= absX && pos.X <= absX+tileSize.Width &&
+		pos.Y >= absY && pos.Y <= absY+tileSize.Height
+}
+
 // HighlightAsDropTarget highlights this tile as a valid drop target
 func (gt *GuestTile) HighlightAsDropTarget() {
 	gt.background.FillColor = color.NRGBA{200, 255, 200, 255} // Light green
 	gt.border.StrokeColor = color.NRGBA{0, 200, 0, 255}       // Green border
-	gt.border.StrokeWidth = 3                                 // Even thicker when highlighted
+	gt.border.StrokeWidth = 3                                 // Thicker when highlighted
+	gt.background.Refresh()
+	gt.border.Refresh()
+}
+
+func (gt *GuestTile) HighlightAsInvalidTarget() {
+	gt.background.FillColor = color.NRGBA{255, 200, 200, 255} // Light red
+	gt.border.StrokeColor = color.NRGBA{255, 0, 0, 255}       // Red border
+	gt.border.StrokeWidth = 3                                 // Thicker when highlighted
 	gt.background.Refresh()
 	gt.border.Refresh()
 }
 
 // RemoveHighlight removes drop target highlighting
 func (gt *GuestTile) RemoveHighlight() {
-	gt.background.FillColor = color.NRGBA{230, 230, 230, 255} // Back to light gray
-	gt.border.StrokeColor = color.NRGBA{150, 150, 150, 255}   // Back to dark gray
+	gt.background.FillColor = color.NRGBA{240, 240, 240, 255} // Back to light gray
+	gt.border.StrokeColor = color.NRGBA{200, 200, 200, 255}   // Back to light border
 	gt.border.StrokeWidth = 2                                 // Back to normal thickness
 	gt.background.Refresh()
 	gt.border.Refresh()
+}
+
+// GetGuest returns the guest in this tile
+func (gt *GuestTile) GetGuest() *app.Guest {
+	return gt.guest
 }

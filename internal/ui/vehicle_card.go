@@ -23,22 +23,40 @@ type VehicleCard struct {
 	capacityInfo *widget.Label
 
 	// Layout info
-	tilesPerRow int
-	tileSize    fyne.Size
+	tileSize fyne.Size
 }
 
 // NewVehicleCard creates a new vehicle card
 func NewVehicleCard(index int, vehicle *app.Vehicle, grid *VehicleGrid) *VehicleCard {
 	vc := &VehicleCard{
-		index:       index,
-		vehicle:     vehicle,
-		grid:        grid,
-		tilesPerRow: 1,                     // 1 tile per row for vertical alignment
-		tileSize:    fyne.NewSize(220, 50), // Larger tiles
+		index:    index,
+		vehicle:  vehicle,
+		grid:     grid,
+		tileSize: fyne.NewSize(220, 60), // Consistent tile size
 	}
 
-	vc.RefreshTiles()
+	vc.createTiles()
 	return vc
+}
+
+// createTiles creates all tiles for this vehicle
+func (vc *VehicleCard) createTiles() {
+	guestCount := len(vc.vehicle.Guests)
+	totalTiles := guestCount + 2 // Always g + 2 tiles
+
+	vc.tiles = make([]*GuestTile, totalTiles)
+
+	for i := 0; i < totalTiles; i++ {
+		tile := NewGuestTile(vc.index, i, vc.grid, vc)
+
+		if i < guestCount {
+			// This tile should contain a guest
+			tile.SetGuest(&vc.vehicle.Guests[i])
+		}
+		// Otherwise it remains empty
+
+		vc.tiles[i] = tile
+	}
 }
 
 // CreateCard builds the visual card widget
@@ -47,13 +65,15 @@ func (vc *VehicleCard) CreateCard() *widget.Card {
 
 	// Create capacity info label
 	vc.capacityInfo = widget.NewLabel(vc.getCapacityText())
+	vc.capacityInfo.TextStyle = fyne.TextStyle{Bold: true}
 
 	// Create the tile grid
 	vc.tileGrid = vc.createTileGrid()
 
-	// Combine capacity info and tiles
+	// Combine capacity info and tiles with some spacing
 	content := container.NewVBox(
 		vc.capacityInfo,
+		widget.NewSeparator(),
 		vc.tileGrid,
 	)
 
@@ -63,55 +83,39 @@ func (vc *VehicleCard) CreateCard() *widget.Card {
 
 // createTileGrid builds the grid of guest tiles
 func (vc *VehicleCard) createTileGrid() *fyne.Container {
-	guestCount := len(vc.vehicle.Guests)
+	tiles := make([]fyne.CanvasObject, len(vc.tiles))
 
-	// Always g + 2 tiles (guests + 2 empty slots)
-	numTiles := guestCount + 2
-	tiles := make([]fyne.CanvasObject, numTiles)
-
-	for i := 0; i < numTiles; i++ {
-		if i < len(vc.tiles) {
-			tiles[i] = vc.tiles[i].CreateTile()
-		} else {
-			// Create tile (guest or empty)
-			tile := NewGuestTile(vc.index, i, vc.grid)
-			if i < guestCount {
-				// This should have a guest
-				tile.SetGuest(&vc.vehicle.Guests[i])
-			}
-			vc.tiles = append(vc.tiles, tile)
-			tiles[i] = tile.CreateTile()
-		}
+	for i, tile := range vc.tiles {
+		tiles[i] = tile.CreateTile()
 	}
 
-	// Create vertical layout with minimal spacing
+	// Create vertical layout with consistent spacing
 	vbox := container.NewVBox(tiles...)
 	return vbox
 }
 
-// refreshTiles rebuilds the tiles based on current vehicle state
+// RefreshTiles rebuilds the tiles based on current vehicle state
 func (vc *VehicleCard) RefreshTiles() {
-	vc.tiles = make([]*GuestTile, 0)
-	guestCount := len(vc.vehicle.Guests)
-
-	// Always create g + 2 tiles
-	totalTiles := guestCount + 2
-
-	for i := 0; i < totalTiles; i++ {
-		tile := NewGuestTile(vc.index, i, vc.grid)
-
-		if i < guestCount {
-			// This tile should contain a guest
-			tile.SetGuest(&vc.vehicle.Guests[i])
-		}
-		// Otherwise it remains empty
-
-		vc.tiles = append(vc.tiles, tile)
-	}
+	// Recreate tiles with current state
+	vc.createTiles()
 
 	// Update capacity info
 	if vc.capacityInfo != nil {
 		vc.capacityInfo.SetText(vc.getCapacityText())
+	}
+
+	// Rebuild the tile grid if it exists
+	if vc.tileGrid != nil && vc.card != nil {
+		// Clear existing tiles
+		vc.tileGrid.Objects = nil
+
+		// Add new tiles
+		for _, tile := range vc.tiles {
+			vc.tileGrid.Objects = append(vc.tileGrid.Objects, tile.CreateTile())
+		}
+
+		vc.tileGrid.Refresh()
+		vc.card.Refresh()
 	}
 }
 
@@ -119,30 +123,6 @@ func (vc *VehicleCard) RefreshTiles() {
 func (vc *VehicleCard) getCapacityText() string {
 	used := 4 - vc.vehicle.SeatsRemaining // assuming max 4 seats
 	return fmt.Sprintf("Capacity: %d/4 seats", used)
-}
-
-// GetTilePosition returns the screen position of a specific tile
-func (vc *VehicleCard) GetTilePosition(tileIndex int) fyne.Position {
-	if vc.card == nil || tileIndex >= len(vc.tiles) {
-		return fyne.NewPos(0, 0)
-	}
-
-	// Calculate position within the card
-	cardPos := vc.card.Position()
-
-	// Account for card header and capacity label
-	headerHeight := float32(50) // Header + capacity info height
-
-	// Since tiles are stacked vertically, calculate Y position
-	tileY := cardPos.Y + headerHeight + float32(tileIndex)*55 + 5 // 50px height + 5px spacing
-	tileX := cardPos.X + 10                                       // 10px left padding
-
-	return fyne.NewPos(tileX, tileY)
-}
-
-// GetTileSize returns the size of tiles in this vehicle card
-func (vc *VehicleCard) GetTileSize() fyne.Size {
-	return fyne.NewSize(220, 50) // Updated to match larger tile size
 }
 
 // IsTileEmpty checks if a specific tile is empty
@@ -155,7 +135,7 @@ func (vc *VehicleCard) IsTileEmpty(tileIndex int) bool {
 
 // HasCapacityForGuest checks if the vehicle can accommodate the guest
 func (vc *VehicleCard) HasCapacityForGuest(guest *app.Guest) bool {
-	return vc.vehicle.SeatsRemaining >= guest.GroupSize
+	return true
 }
 
 // HideGuest hides a guest from a specific tile (during drag)
@@ -170,4 +150,43 @@ func (vc *VehicleCard) ShowGuest(tileIndex int) {
 	if tileIndex < len(vc.tiles) {
 		vc.tiles[tileIndex].ShowGuest()
 	}
+}
+
+// RemoveAllHighlights removes highlights from all tiles
+func (vc *VehicleCard) RemoveAllHighlights() {
+	for _, tile := range vc.tiles {
+		tile.RemoveHighlight()
+	}
+}
+
+// GetTile returns a specific tile
+func (vc *VehicleCard) GetTile(index int) *GuestTile {
+	if index >= 0 && index < len(vc.tiles) {
+		return vc.tiles[index]
+	}
+	return nil
+}
+
+// GetTilePosition returns the screen position of a specific tile
+func (vc *VehicleCard) GetTilePosition(tileIndex int) fyne.Position {
+	if vc.card == nil || tileIndex >= len(vc.tiles) {
+		return fyne.NewPos(0, 0)
+	}
+
+	// Get the card's position
+	cardPos := vc.card.Position()
+
+	// Account for card header and capacity label
+	headerHeight := float32(70) // Card title + capacity info + separator
+
+	// Since tiles are stacked vertically, calculate Y position
+	tileY := cardPos.Y + headerHeight + float32(tileIndex)*65 // 60px height + 5px spacing
+	tileX := cardPos.X + 10                                   // 10px left padding from card edge
+
+	return fyne.NewPos(tileX, tileY)
+}
+
+// GetTileSize returns the size of tiles in this vehicle card
+func (vc *VehicleCard) GetTileSize() fyne.Size {
+	return vc.tileSize // This is already set to fyne.NewSize(220, 60) in the struct
 }
