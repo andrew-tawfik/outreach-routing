@@ -361,12 +361,13 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 	// Different vehicle move
 	sourceVehicle := &vg.routeManager.Vehicles[from.VehicleIndex]
 	guestIndex := vg.findGuestIndex(sourceVehicle, vg.draggedGuest)
+	guest := sourceVehicle.Guests[guestIndex]
 	if guestIndex >= 0 {
 		sourceVehicle.Guests = append(
 			sourceVehicle.Guests[:guestIndex],
 			sourceVehicle.Guests[guestIndex+1:]...,
 		)
-		sourceVehicle.SeatsRemaining += vg.draggedGuest.GroupSize
+		sourceVehicle.SeatsRemaining -= vg.draggedGuest.GroupSize
 	}
 
 	// Add guest to target vehicle at the specific tile position
@@ -380,9 +381,9 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 
 	// Insert guest at the specified position
 	targetVehicle.Guests = append(targetVehicle.Guests[:insertPos],
-		append([]app.Guest{*vg.draggedGuest}, targetVehicle.Guests[insertPos:]...)...)
+		append([]app.Guest{guest}, targetVehicle.Guests[insertPos:]...)...)
 
-	targetVehicle.SeatsRemaining -= vg.draggedGuest.GroupSize
+	targetVehicle.SeatsRemaining += guest.GroupSize
 
 	// Refresh both vehicles
 	vg.refreshAfterMove()
