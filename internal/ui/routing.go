@@ -2,6 +2,7 @@ package ui
 
 import (
 	//"fmt"
+
 	"log"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
@@ -57,6 +58,13 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 	// Map geo-level data to app-level event and location registry
 	appEvent, lr := converter.MapDatabaseGeoEventToApp(geoEvent)
 
+	err = app.SaveAppDataToFile("data.json", *appEvent, *lr)
+	if err != nil {
+		log.Printf("Warning: Could not save data to JSON: %v", err)
+	} else {
+		log.Println("Data saved to data.json for testing")
+	}
+
 	// Initialize the route manager
 	RouteManager := app.CreateRouteManager(lr)
 
@@ -78,4 +86,30 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 
 func (rp *RoutingProcess) String() string {
 	return rp.rm.Display(rp.ae, rp.lr)
+}
+
+func ProcessJsonEvent() *RoutingProcess {
+
+	appEvent, lr, err := app.LoadAppDataFromFile("data.json")
+	if err != nil {
+		log.Fatalf("Could not load json event information. ")
+	}
+
+	// Initialize the route manager
+	RouteManager := app.CreateRouteManager(&lr)
+
+	// Determine savings between guest pairings using Clarke-Wright Algorithm
+	RouteManager.DetermineSavingList(&lr)
+
+	// Start Route Dispatch Algorithm
+	RouteManager.StartRouteDispatch()
+
+	RouteManager.Display(&appEvent, &lr)
+
+	return &RoutingProcess{
+		rm: RouteManager,
+		ae: &appEvent,
+		lr: &lr,
+	}
+
 }

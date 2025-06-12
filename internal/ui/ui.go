@@ -25,7 +25,7 @@ func (cfg *Config) MakeUI() {
 	var currentGrid *VehicleGrid // Store reference to current grid
 
 	runButton := widget.NewButton("Run", func() {
-		cfg.Rp = ProcessEvent(urlEntry.Text)
+		cfg.Rp = ProcessJsonEvent()
 		outputEntry.SetText(cfg.Rp.String())
 
 		currentGrid = NewVehicleGrid(cfg.Rp.rm, cfg)

@@ -17,6 +17,21 @@ func CoordinateKey(c coordinates.GuestCoordinates) string {
 	return fmt.Sprintf("%.6f,%.6f", c.Long, c.Lat)
 }
 
+// SerializableGuest is a JSON-friendly version of Guest
+type SerializableGuest struct {
+	Name        string
+	GroupSize   int
+	Coordinates string // Store as "long,lat" string
+	Address     string
+	PhoneNumber string
+}
+
+// SerializableEvent is a JSON-friendly version of Event
+type SerializableEvent struct {
+	Guests    []SerializableGuest
+	EventType string
+}
+
 type SerializableCoordinateMapping struct {
 	DestinationOccupancy map[string]int
 	CoordinateToAddress  map[string]string
@@ -29,8 +44,48 @@ type SerializableLocationRegistry struct {
 }
 
 type SerializableAppData struct {
-	Event            Event
+	Event            SerializableEvent
 	LocationRegistry SerializableLocationRegistry
+}
+
+// ConvertEventToSerializable converts an Event to its serializable form
+func ConvertEventToSerializable(event Event) SerializableEvent {
+	guests := make([]SerializableGuest, len(event.Guests))
+	for i, g := range event.Guests {
+		guests[i] = SerializableGuest{
+			Name:        g.Name,
+			GroupSize:   g.GroupSize,
+			Coordinates: CoordinateKey(g.Coordinates),
+			Address:     g.Address,
+			PhoneNumber: g.PhoneNumber,
+		}
+	}
+
+	return SerializableEvent{
+		Guests:    guests,
+		EventType: event.EventType,
+	}
+}
+
+// ConvertEventFromSerializable converts a SerializableEvent back to Event
+func ConvertEventFromSerializable(se SerializableEvent) Event {
+	guests := make([]Guest, len(se.Guests))
+	for i, sg := range se.Guests {
+		var lat, long float64
+		fmt.Sscanf(sg.Coordinates, "%f,%f", &long, &lat)
+		guests[i] = Guest{
+			Name:        sg.Name,
+			GroupSize:   sg.GroupSize,
+			Coordinates: coordinates.GuestCoordinates{Long: long, Lat: lat},
+			Address:     sg.Address,
+			PhoneNumber: sg.PhoneNumber,
+		}
+	}
+
+	return Event{
+		Guests:    guests,
+		EventType: se.EventType,
+	}
 }
 
 func ConvertToSerializable(lr LocationRegistry) SerializableLocationRegistry {
@@ -83,7 +138,7 @@ func ConvertFromSerializable(slr SerializableLocationRegistry) LocationRegistry 
 
 func SaveAppDataToFile(filename string, event Event, lr LocationRegistry) error {
 	serializable := SerializableAppData{
-		Event:            event,
+		Event:            ConvertEventToSerializable(event),
 		LocationRegistry: ConvertToSerializable(lr),
 	}
 
@@ -113,6 +168,7 @@ func LoadAppDataFromFile(filename string) (Event, LocationRegistry, error) {
 		return Event{}, LocationRegistry{}, err
 	}
 
+	event := ConvertEventFromSerializable(serializable.Event)
 	lr := ConvertFromSerializable(serializable.LocationRegistry)
-	return serializable.Event, lr, nil
+	return event, lr, nil
 }
