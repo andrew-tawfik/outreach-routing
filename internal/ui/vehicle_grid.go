@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"image/color"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -222,14 +221,14 @@ func (vg *VehicleGrid) EndDrag(globalPos fyne.Position) {
 		// Invalid drop - show red briefly then return to original
 		if targetPos.VehicleIndex >= 0 && targetPos.TileIndex >= 0 {
 			// Flash red on the invalid target
-			tile := vg.vehicles[targetPos.VehicleIndex].tiles[targetPos.TileIndex]
-			tile.HighlightAsInvalidTarget()
+			//tile := vg.vehicles[targetPos.VehicleIndex].tiles[targetPos.TileIndex]
+			//tile.HighlightAsInvalidTarget()
 			vg.config.InfoLog.Printf("HERE INVALID")
 
 			// Remove red after a short delay
-			time.AfterFunc(500*time.Millisecond, func() {
-				tile.RemoveHighlight()
-			})
+
+			//tile.RemoveHighlight()
+
 		}
 
 		// Return guest to original position
@@ -367,7 +366,7 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 			sourceVehicle.Guests[:guestIndex],
 			sourceVehicle.Guests[guestIndex+1:]...,
 		)
-		sourceVehicle.SeatsRemaining -= vg.draggedGuest.GroupSize
+		sourceVehicle.SeatsRemaining += vg.draggedGuest.GroupSize
 	}
 
 	// Add guest to target vehicle at the specific tile position
@@ -383,7 +382,7 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 	targetVehicle.Guests = append(targetVehicle.Guests[:insertPos],
 		append([]app.Guest{guest}, targetVehicle.Guests[insertPos:]...)...)
 
-	targetVehicle.SeatsRemaining += guest.GroupSize
+	targetVehicle.SeatsRemaining -= guest.GroupSize
 
 	// Refresh both vehicles
 	vg.refreshAfterMove()
