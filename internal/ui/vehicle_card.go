@@ -70,14 +70,7 @@ func (vc *VehicleCard) CreateCard() *widget.Card {
 	// Create the tile grid
 	vc.tileGrid = vc.createTileGrid()
 
-	// Combine capacity info and tiles with some spacing
-	content := container.NewVBox(
-		vc.capacityInfo,
-		widget.NewSeparator(),
-		vc.tileGrid,
-	)
-
-	vc.card = widget.NewCard(title, "", content)
+	vc.card = widget.NewCard(title, "", vc.tileGrid)
 	return vc.card
 }
 

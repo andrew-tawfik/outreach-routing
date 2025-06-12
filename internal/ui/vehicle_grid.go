@@ -119,8 +119,8 @@ func (vg *VehicleGrid) createVehicleCards() *fyne.Container {
 		cards = append(cards, vehicleCard.CreateCard())
 	}
 
-	// Use 3 columns for better spacing
-	return container.NewGridWithColumns(3, cards...)
+	// Use 4 columns for better spacing
+	return container.NewGridWithColumns(4, cards...)
 }
 
 // refreshVehicles rebuilds the vehicle cards from current state
@@ -190,7 +190,7 @@ func (vg *VehicleGrid) UpdateDrag(globalPos fyne.Position) {
 	// Update the drag position - center the widget on cursor
 	vg.dragPosition = fyne.NewPos(
 		globalPos.X-95,  // Center horizontally
-		globalPos.Y-500, // Center vertically with offset correction
+		globalPos.Y-450, // Center vertically with offset correction
 	)
 
 	// Move the drag visual to the new position
@@ -460,7 +460,7 @@ func (vg *VehicleGrid) findTileAtPosition(mousePos fyne.Position) VehiclePositio
 
 	// Calculate the position relative to the scrolled content
 	// Add back the Y offset that seems to be present in your setup
-	adjustedMouseY := mousePos.Y - 500 // Compensate for the same offset used in visual positioning
+	adjustedMouseY := mousePos.Y - 450 // Compensate for the same offset used in visual positioning
 
 	contentPos := fyne.NewPos(
 		mousePos.X-mainPos.X+scrollOffset.X,
