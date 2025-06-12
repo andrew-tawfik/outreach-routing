@@ -48,28 +48,23 @@ func (gw *GuestWidget) CreateRenderer() fyne.WidgetRenderer {
 	gw.background.CornerRadius = 3
 
 	// Create labels
-	nameAndGroup := fmt.Sprintf("%s (%d)", gw.guest.Name, gw.guest.GroupSize)
+
+	name := gw.guest.Name
+	if len(name) > 23 {
+		name = name[:20] + "..."
+	}
+	nameAndGroup := fmt.Sprintf("%s (%d)", name, gw.guest.GroupSize)
 	nameLabel := widget.NewLabel(nameAndGroup)
 	nameLabel.TextStyle = fyne.TextStyle{Bold: true}
 	nameLabel.TextStyle.Monospace = false
 
-	// Truncate address if too long
-	address := gw.guest.Address
-	if len(address) > 25 {
-		address = address[:22] + "..."
-	}
-	addressLabel := widget.NewLabel(address)
-	addressLabel.TextStyle.Monospace = false
-
 	// Set text color to white for better contrast
 	nameLabel.Importance = widget.HighImportance
-	addressLabel.Importance = widget.MediumImportance
 
 	// Content container
-	textContent := container.NewVBox(nameLabel, addressLabel)
 	gw.content = container.NewMax(
 		gw.background,
-		container.NewPadded(textContent),
+		container.NewPadded(nameLabel),
 	)
 
 	return &guestWidgetRenderer{
