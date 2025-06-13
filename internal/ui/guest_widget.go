@@ -44,7 +44,7 @@ func NewGuestWidget(guest *app.Guest, vehicleIndex, tileIndex int, grid *Vehicle
 // CreateRenderer creates the renderer for the guest widget
 func (gw *GuestWidget) CreateRenderer() fyne.WidgetRenderer {
 	// Background with rounded corners
-	gw.background = canvas.NewRectangle(color.NRGBA{70, 130, 180, 255}) // Steel blue
+	gw.background = canvas.NewRectangle(color.NRGBA{60, 60, 70, 255})
 	gw.background.CornerRadius = 3
 
 	// Create labels
@@ -57,9 +57,6 @@ func (gw *GuestWidget) CreateRenderer() fyne.WidgetRenderer {
 	nameLabel := widget.NewLabel(nameAndGroup)
 	nameLabel.TextStyle = fyne.TextStyle{Bold: true}
 	nameLabel.TextStyle.Monospace = false
-
-	// Set text color to white for better contrast
-	nameLabel.Importance = widget.HighImportance
 
 	// Content container
 	gw.content = container.NewMax(
@@ -91,9 +88,9 @@ func (r *guestWidgetRenderer) Refresh() {
 	// Update background color based on state
 	if r.widget.grid.IsDragging() &&
 		r.widget.grid.GetDraggedGuest() == r.widget.guest {
-		r.widget.background.FillColor = color.NRGBA{255, 100, 100, 100} // Semi-transparent during drag
+		//r.widget.background.FillColor = color.NRGBA{255, 100, 100, 100} // Semi-transparent during drag
 	} else {
-		r.widget.background.FillColor = color.NRGBA{70, 130, 180, 255} // Normal blue
+		//r.widget.background.FillColor = color.NRGBA{70, 130, 180, 255} // Normal blue
 	}
 	r.widget.background.Refresh()
 }
@@ -118,18 +115,6 @@ func (gw *GuestWidget) Dragged(ev *fyne.DragEvent) {
 		offset := ev.Position
 		globalMousePos := ev.AbsolutePosition
 
-		// Log positions
-		widgetPos := gw.Position()
-		widgetSize := gw.Size()
-
-		gw.grid.config.InfoLog.Printf("=== DRAG START ===")
-		gw.grid.config.InfoLog.Printf("Guest: %s", gw.guest.Name)
-		gw.grid.config.InfoLog.Printf("Widget Position: X=%.2f, Y=%.2f", widgetPos.X, widgetPos.Y)
-		gw.grid.config.InfoLog.Printf("Widget Size: W=%.2f, H=%.2f", widgetSize.Width, widgetSize.Height)
-		gw.grid.config.InfoLog.Printf("Mouse Click Offset (relative to widget): X=%.2f, Y=%.2f", offset.X, offset.Y)
-		gw.grid.config.InfoLog.Printf("Mouse Absolute Position: X=%.2f, Y=%.2f", globalMousePos.X, globalMousePos.Y)
-		gw.grid.config.InfoLog.Printf("=================")
-
 		// Start the drag with proper positions
 		gw.grid.StartDrag(gw.guest, origin, globalMousePos, offset)
 	}
@@ -142,7 +127,6 @@ func (gw *GuestWidget) DragEnd() {
 
 // Tapped handles tap/click events
 func (gw *GuestWidget) Tapped(_ *fyne.PointEvent) {
-	gw.grid.config.InfoLog.Printf("Tapped guest: %s", gw.guest.Name)
 }
 
 // TappedSecondary handles right-click events

@@ -50,14 +50,14 @@ func NewGuestTile(vehicleIndex, tileIndex int, grid *VehicleGrid, card *VehicleC
 // setupVisuals initializes the visual components
 func (gt *GuestTile) setupVisuals() {
 	// Tile background - distinct color so you can see tile boundaries
-	gt.background = canvas.NewRectangle(color.NRGBA{240, 240, 240, 255}) // Light gray
+	gt.background = canvas.NewRectangle(color.NRGBA{70, 70, 80, 255})
 	gt.background.CornerRadius = 5
 
 	// Prominent border so tiles are clearly visible
-	gt.border = canvas.NewRectangle(color.Transparent)
-	gt.border.StrokeColor = color.NRGBA{200, 200, 200, 255} // Light border
+	gt.border = canvas.NewRectangle(color.NRGBA{80, 80, 90, 255})
+	gt.border.StrokeColor = color.NRGBA{80, 80, 90, 255}
 	gt.border.StrokeWidth = 2
-	gt.border.FillColor = color.Transparent
+	gt.border.FillColor = color.NRGBA{80, 80, 90, 255}
 	gt.border.CornerRadius = 5
 
 	// Placeholder text for empty tiles
@@ -196,19 +196,11 @@ func (gt *GuestTile) HighlightAsDropTarget() {
 	gt.border.Refresh()
 }
 
-func (gt *GuestTile) HighlightAsInvalidTarget() {
-	gt.background.FillColor = color.NRGBA{255, 200, 200, 255} // Light red
-	gt.border.StrokeColor = color.NRGBA{255, 0, 0, 255}       // Red border
-	gt.border.StrokeWidth = 3                                 // Thicker when highlighted
-	gt.background.Refresh()
-	gt.border.Refresh()
-}
-
 // RemoveHighlight removes drop target highlighting
 func (gt *GuestTile) RemoveHighlight() {
-	gt.background.FillColor = color.NRGBA{240, 240, 240, 255} // Back to light gray
-	gt.border.StrokeColor = color.NRGBA{200, 200, 200, 255}   // Back to light border
-	gt.border.StrokeWidth = 2                                 // Back to normal thickness
+	gt.background.FillColor = color.NRGBA{70, 70, 80, 255} // Back to light gray
+	gt.border.StrokeColor = color.NRGBA{80, 80, 90, 255}   // Back to light border
+	gt.border.StrokeWidth = 2                              // Back to normal thickness
 	gt.background.Refresh()
 	gt.border.Refresh()
 }

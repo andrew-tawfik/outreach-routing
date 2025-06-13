@@ -157,20 +157,14 @@ func (vg *VehicleGrid) StartDrag(guest *app.Guest, origin VehiclePosition, start
 // createDragVisual creates the visual representation of the dragged guest
 func (vg *VehicleGrid) createDragVisual(guest *app.Guest) {
 	// Create a semi-transparent version of the guest widget
-	background := canvas.NewRectangle(color.NRGBA{70, 130, 180, 200}) // Semi-transparent blue
+	background := canvas.NewRectangle(color.NRGBA{60, 60, 70, 255}) // Semi-transparent blue
 	background.CornerRadius = 3
 	background.Resize(fyne.NewSize(190, 40))
 
 	nameLabel := widget.NewLabel(guest.Name + " (" + fmt.Sprintf("%d", guest.GroupSize) + ")")
 	nameLabel.TextStyle = fyne.TextStyle{Bold: true}
 
-	addressLabel := widget.NewLabel(guest.Address)
-	if len(guest.Address) > 20 {
-		addressLabel.SetText(guest.Address[:17] + "...")
-	}
-
-	content := container.NewVBox(nameLabel, addressLabel)
-	vg.dragVisual = container.NewMax(background, container.NewPadded(content))
+	vg.dragVisual = container.NewMax(background, container.NewPadded(nameLabel))
 	vg.dragVisual.Resize(fyne.NewSize(190, 40))
 }
 

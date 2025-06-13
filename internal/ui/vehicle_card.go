@@ -9,6 +9,8 @@ import (
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
 )
 
+var extraTiles = 1
+
 // VehicleCard represents a single vehicle with its guest tiles
 type VehicleCard struct {
 	// Identity
@@ -42,7 +44,7 @@ func NewVehicleCard(index int, vehicle *app.Vehicle, grid *VehicleGrid) *Vehicle
 // createTiles creates all tiles for this vehicle
 func (vc *VehicleCard) createTiles() {
 	guestCount := len(vc.vehicle.Guests)
-	totalTiles := guestCount + 2 // Always g + 2 tiles
+	totalTiles := guestCount + extraTiles
 
 	vc.tiles = make([]*GuestTile, totalTiles)
 
