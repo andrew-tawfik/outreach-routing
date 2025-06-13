@@ -2,8 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
@@ -21,7 +23,7 @@ type VehicleCard struct {
 	// UI Components
 	tiles        []*GuestTile
 	tileGrid     *fyne.Container
-	card         *widget.Card
+	card         fyne.CanvasObject
 	capacityInfo *widget.Label
 
 	// Layout info
@@ -62,17 +64,43 @@ func (vc *VehicleCard) createTiles() {
 }
 
 // CreateCard builds the visual card widget
-func (vc *VehicleCard) CreateCard() *widget.Card {
+func (vc *VehicleCard) CreateCard() fyne.CanvasObject {
 	title := fmt.Sprintf("Vehicle %d", vc.index+1)
 
-	// Create capacity info label
-	vc.capacityInfo = widget.NewLabel(vc.getCapacityText())
-	vc.capacityInfo.TextStyle = fyne.TextStyle{Bold: true}
+	// Create the background rectangle
+	background := canvas.NewRectangle(color.NRGBA{40, 40, 45, 255})
+	background.CornerRadius = 12
+
+	// Create title label
+	titleLabel := widget.NewLabel(title)
+	titleLabel.TextStyle = fyne.TextStyle{Bold: true}
 
 	// Create the tile grid
 	vc.tileGrid = vc.createTileGrid()
 
-	vc.card = widget.NewCard(title, "", vc.tileGrid)
+	// Combine title and tiles
+	content := container.NewVBox(
+		titleLabel,
+		widget.NewSeparator(),
+		vc.tileGrid,
+	)
+
+	// Add extra padding here for spacing between cards
+	paddedContent := container.NewPadded(content)
+
+	// Add margin by using a border container with transparent spacers
+	spacer := canvas.NewRectangle(color.Transparent)
+	spacer.SetMinSize(fyne.NewSize(5, 5)) // Adjust spacing
+
+	cardWithSpacing := container.NewBorder(
+		spacer, // top
+		spacer, // bottom
+		spacer, // left
+		spacer, // right
+		container.NewMax(background, paddedContent), // center
+	)
+
+	vc.card = cardWithSpacing
 	return vc.card
 }
 

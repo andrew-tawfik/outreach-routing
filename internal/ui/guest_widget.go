@@ -55,7 +55,7 @@ func (gw *GuestWidget) CreateRenderer() fyne.WidgetRenderer {
 	}
 	nameAndGroup := fmt.Sprintf("%s (%d)", name, gw.guest.GroupSize)
 	nameLabel := widget.NewLabel(nameAndGroup)
-	nameLabel.TextStyle = fyne.TextStyle{Bold: true}
+	nameLabel.TextStyle = fyne.TextStyle{Bold: false}
 	nameLabel.TextStyle.Monospace = false
 
 	// Content container
