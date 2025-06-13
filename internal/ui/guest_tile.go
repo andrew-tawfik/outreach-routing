@@ -61,7 +61,7 @@ func (gt *GuestTile) setupVisuals() {
 	gt.border.CornerRadius = 5
 
 	// Placeholder text for empty tiles
-	gt.placeholder = widget.NewLabel("Empty slot")
+	gt.placeholder = widget.NewLabel("")
 	gt.placeholder.Alignment = fyne.TextAlignCenter
 	gt.placeholder.TextStyle = fyne.TextStyle{Italic: true}
 }
@@ -84,7 +84,7 @@ func (gt *GuestTile) CreateTile() fyne.CanvasObject {
 	}
 
 	gt.container = container.NewMax(baseObjects...)
-	gt.container.Resize(fyne.NewSize(220, 60))
+	gt.container.Resize(fyne.NewSize(220, 70))
 	return gt.container
 }
 
