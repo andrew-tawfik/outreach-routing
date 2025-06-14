@@ -1,6 +1,7 @@
 package app
 
 import (
+	"container/list"
 	"fmt"
 	"strings"
 )
@@ -17,7 +18,6 @@ func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) string {
 		b.WriteString(vehicleInfo)
 		b.WriteString("\n")
 	}
-
 	return b.String()
 }
 
@@ -73,4 +73,28 @@ func displayGuests(guests []Guest) string {
 		}
 	}
 	return sb.String()
+}
+
+// UpdateRouteFromGuests rebuilds the Route.List based on current guests
+func (v *Vehicle) UpdateRouteFromGuests(lr *LocationRegistry) {
+	if len(v.Guests) == 0 {
+		v.Route.List = nil
+		v.Route.DestinationCount = 0
+		return
+	}
+
+	// Create new linked list
+	v.Route.List = list.New()
+	v.Route.DestinationCount = 0
+
+	// Find the index for each guest's address in the addressOrder
+	for _, guest := range v.Guests {
+		for idx, addr := range lr.CoordianteMap.AddressOrder {
+			if addr == guest.Address {
+				v.Route.List.PushBack(idx)
+				v.Route.DestinationCount++
+				break
+			}
+		}
+	}
 }

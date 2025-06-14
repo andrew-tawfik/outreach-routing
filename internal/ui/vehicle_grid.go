@@ -59,7 +59,7 @@ func NewVehicleGrid(rm *app.RouteManager, cfg *Config) *VehicleGrid {
 	vg.dragOverlay.Hide()
 
 	// Initialize vehicle manager
-	vg.vehicleManager = NewVehicleManager(rm, vg)
+	vg.vehicleManager = NewVehicleManager(rm, vg, cfg)
 
 	vg.ExtendBaseWidget(vg)
 
@@ -297,9 +297,11 @@ func (vg *VehicleGrid) isValidDropTarget(target VehiclePosition) bool {
 }
 
 func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
+	rm := vg.config.Rp.rm
+
 	// Special handling for same-vehicle moves
 	if from.VehicleIndex == to.VehicleIndex {
-		vehicle := &vg.routeManager.Vehicles[from.VehicleIndex]
+		vehicle := &rm.Vehicles[from.VehicleIndex]
 
 		// Find the guest's current position
 		guestIndex := vg.findGuestIndex(vehicle, vg.draggedGuest)
@@ -340,7 +342,7 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 	}
 
 	// Different vehicle move
-	sourceVehicle := &vg.routeManager.Vehicles[from.VehicleIndex]
+	sourceVehicle := &rm.Vehicles[from.VehicleIndex]
 	guestIndex := vg.findGuestIndex(sourceVehicle, vg.draggedGuest)
 	guest := sourceVehicle.Guests[guestIndex]
 	if guestIndex >= 0 {
@@ -352,7 +354,7 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 	}
 
 	// Add guest to target vehicle at the specific tile position
-	targetVehicle := &vg.routeManager.Vehicles[to.VehicleIndex]
+	targetVehicle := &rm.Vehicles[to.VehicleIndex]
 
 	// Insert at the tile position (but don't exceed current guest count)
 	insertPos := to.TileIndex
@@ -365,6 +367,8 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 		append([]app.Guest{guest}, targetVehicle.Guests[insertPos:]...)...)
 
 	targetVehicle.SeatsRemaining -= guest.GroupSize
+
+	vg.updateVehicleRoutes()
 
 	// Refresh both vehicles
 	vg.refreshAfterMove()
@@ -482,7 +486,6 @@ func (vg *VehicleGrid) findTileAtPosition(mousePos fyne.Position) VehiclePositio
 				if contentPos.X >= tilePosInCard.X && contentPos.X <= tilePosInCard.X+tileSize.Width &&
 					contentPos.Y >= tilePosInCard.Y && contentPos.Y <= tilePosInCard.Y+tileSize.Height {
 
-					vg.config.InfoLog.Printf("Found tile at Vehicle %d, Tile %d", vIndex, tIndex)
 					return VehiclePosition{VehicleIndex: vIndex, TileIndex: tIndex}
 				}
 			}
@@ -495,4 +498,14 @@ func (vg *VehicleGrid) findTileAtPosition(mousePos fyne.Position) VehiclePositio
 // GetDragPosition returns the current position of the dragged guest
 func (vg *VehicleGrid) GetDragPosition() fyne.Position {
 	return vg.dragPosition
+}
+
+// Call this method after any guest move operation in VehicleGrid
+func (vg *VehicleGrid) updateVehicleRoutes() {
+	rm := vg.config.Rp.rm
+	lr := vg.config.Rp.lr
+
+	for i := range rm.Vehicles {
+		rm.Vehicles[i].UpdateRouteFromGuests(lr)
+	}
 }

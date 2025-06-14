@@ -8,6 +8,7 @@ import (
 type VehicleManager struct {
 	routeManager *app.RouteManager
 	grid         *VehicleGrid
+	config       *Config
 
 	// State tracking
 	initialState map[int][]app.Guest // Original state for reset functionality
@@ -15,11 +16,12 @@ type VehicleManager struct {
 }
 
 // NewVehicleManager creates a new vehicle manager
-func NewVehicleManager(rm *app.RouteManager, grid *VehicleGrid) *VehicleManager {
+func NewVehicleManager(rm *app.RouteManager, grid *VehicleGrid, cfg *Config) *VehicleManager {
 	vm := &VehicleManager{
 		routeManager: rm,
 		grid:         grid,
 		initialState: make(map[int][]app.Guest),
+		config:       cfg,
 	}
 
 	vm.captureInitialState()
@@ -39,13 +41,15 @@ func (vm *VehicleManager) captureInitialState() {
 
 // MoveGuest moves a guest from one vehicle to another
 func (vm *VehicleManager) MoveGuest(guest *app.Guest, fromVehicle, toVehicle int) error {
-	if fromVehicle < 0 || fromVehicle >= len(vm.routeManager.Vehicles) ||
-		toVehicle < 0 || toVehicle >= len(vm.routeManager.Vehicles) {
+	rm := vm.config.Rp.rm
+
+	if fromVehicle < 0 || fromVehicle >= len(rm.Vehicles) ||
+		toVehicle < 0 || toVehicle >= len(rm.Vehicles) {
 		return NewVehicleError("invalid vehicle index")
 	}
 
-	sourceVehicle := &vm.routeManager.Vehicles[fromVehicle]
-	targetVehicle := &vm.routeManager.Vehicles[toVehicle]
+	sourceVehicle := &rm.Vehicles[fromVehicle]
+	targetVehicle := &rm.Vehicles[toVehicle]
 
 	// Check capacity
 	if targetVehicle.SeatsRemaining < guest.GroupSize {

@@ -73,8 +73,13 @@ func (cfg *Config) MakeUI() {
 	buttonBar := CreateButtonBar(
 		func() {
 			if currentGrid != nil {
-				currentGrid.SubmitChanges()
-				cfg.InfoLog.Println("Changes submitted")
+				//currentGrid.SubmitChanges()
+				if cfg.Rp != nil {
+					outputEntry.SetText(cfg.Rp.String())
+					outputEntry.Refresh()
+					cfg.InfoLog.Println("Changes submitted")
+				}
+
 			}
 		},
 		func() {
