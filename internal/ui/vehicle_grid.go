@@ -175,7 +175,7 @@ func (vg *VehicleGrid) UpdateDrag(globalPos fyne.Position) {
 		return
 	}
 
-	vg.currentMousePos = globalPos
+	vg.currentMousePos = fyne.Position{X: globalPos.X, Y: globalPos.Y - 20}
 
 	// Show on first move if hidden
 	if !vg.dragOverlay.Visible() {
@@ -197,14 +197,13 @@ func (vg *VehicleGrid) UpdateDrag(globalPos fyne.Position) {
 }
 
 // EndDrag completes the drag operation
-// EndDrag completes the drag operation
 func (vg *VehicleGrid) EndDrag(globalPos fyne.Position) {
 	if !vg.isDragging {
 		return
 	}
 
 	// Update mouse position one last time
-	vg.currentMousePos = globalPos
+	vg.currentMousePos = fyne.Position{X: globalPos.X, Y: globalPos.Y - 20}
 
 	// Find the target position based on mouse position
 	targetPos := vg.positionToTile()
@@ -214,19 +213,6 @@ func (vg *VehicleGrid) EndDrag(globalPos fyne.Position) {
 		vg.config.InfoLog.Printf("Moved guest %s from Vehicle %d to Vehicle %d",
 			vg.draggedGuest.Name, vg.dragOrigin.VehicleIndex, targetPos.VehicleIndex)
 	} else {
-		// Invalid drop - show red briefly then return to original
-		if targetPos.VehicleIndex >= 0 && targetPos.TileIndex >= 0 {
-			// Flash red on the invalid target
-			//tile := vg.vehicles[targetPos.VehicleIndex].tiles[targetPos.TileIndex]
-			//tile.HighlightAsInvalidTarget()
-			vg.config.InfoLog.Printf("HERE INVALID")
-
-			// Remove red after a short delay
-
-			//tile.RemoveHighlight()
-
-		}
-
 		// Return guest to original position
 		vg.vehicles[vg.dragOrigin.VehicleIndex].ShowGuest(vg.dragOrigin.TileIndex)
 		vg.config.InfoLog.Printf("Invalid drop for guest: %s", vg.draggedGuest.Name)

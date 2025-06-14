@@ -1,7 +1,11 @@
 package ui
 
 import (
+	"image/color"
+	"math"
+
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
@@ -28,52 +32,75 @@ func (cfg *Config) MakeUI() {
 		cfg.VehicleSection.Refresh()
 	})
 	runButton.Importance = widget.HighImportance
+	spacer := canvas.NewRectangle(color.Transparent)
+	spacer.SetMinSize(fyne.NewSize(500, 1)) // 1px height to keep it invisible
+
+	rButton := container.NewHBox(
+		runButton,
+		spacer,
+	)
 
 	urlCard := widget.NewCard("Insert Google Sheet URL", "", container.NewVBox(
-		container.NewBorder(nil, nil, nil, runButton, urlEntry),
+		container.NewBorder(nil, nil, nil, rButton, urlEntry),
 	))
 
 	// ---- Output & Actions ----------------------------------
-	submitButton := widget.NewButton("Submit", func() {
-		if currentGrid != nil {
-			currentGrid.SubmitChanges()
-			cfg.InfoLog.Println("Changes submitted")
-		}
-	})
-	submitButton.Importance = widget.HighImportance
 
-	resetButton := widget.NewButton("Reset", func() {
-		if currentGrid != nil {
-			currentGrid.ResetVehicles()
-			cfg.InfoLog.Println("Reset to initial state")
-		}
-	})
-
-	buttonBar := container.NewHBox(submitButton, resetButton)
 	outputScroll := container.NewScroll(outputEntry)
 	outputScroll.SetMinSize(fyne.NewSize(350, 300))
 
-	outputSection := container.NewBorder(
-		widget.NewLabel("Results"), // top
-		nil,                        // bottom
-		nil,                        // left
-		nil,                        // right
-		outputScroll,               // center
-	)
+	outputSection := widget.NewCard("Results", "", container.NewBorder(nil, nil, nil, nil, outputScroll))
+
+	spacer1 := canvas.NewRectangle(color.Transparent)
+	spacer1.SetMinSize(fyne.NewSize(0, 100))
+
+	spacer2 := canvas.NewRectangle(color.Transparent)
+	spacer2.SetMinSize(fyne.NewSize(0, 20))
 
 	homeTab := container.NewVBox(
-		urlCard,       // Your input section
+		spacer2,
+		urlCard, // Your input section
+		spacer1,
 		outputSection, // Results text
 	)
 
+	gradient := canvas.NewLinearGradient(
+		color.NRGBA{55, 48, 163, 255}, // Dark purple
+		color.NRGBA{75, 61, 96, 255},  // Dark violet-gray
+		math.Pi/4,
+	)
+
+	buttonBar := CreateButtonBar(
+		func() {
+			if currentGrid != nil {
+				currentGrid.SubmitChanges()
+				cfg.InfoLog.Println("Changes submitted")
+			}
+		},
+		func() {
+			if currentGrid != nil {
+				currentGrid.ResetVehicles()
+				cfg.InfoLog.Println("Reset to initial state")
+			}
+		},
+	)
+
+	buttonBarBg := canvas.NewRectangle(color.NRGBA{25, 25, 30, 255})
+	buttonBarContainer := container.NewMax(
+		buttonBarBg,
+		container.NewPadded(buttonBar),
+	)
+
 	// Create Route Planning tab content
-	routePlanningTab := container.NewBorder(
-		buttonBar, // Action buttons at top
+	routePlanningContent := container.NewBorder(
+		buttonBarContainer, // Action buttons at top
 		nil,
 		nil,
 		nil,
 		cfg.VehicleSection, // Vehicle grid
 	)
+
+	routePlanningTab := container.NewMax(gradient, routePlanningContent)
 
 	// Create the tab container
 	tabs := container.NewAppTabs(
