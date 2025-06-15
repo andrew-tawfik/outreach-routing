@@ -117,3 +117,40 @@ func (rm *RouteManager) enoughSeatsToExtend(vehicleIndex, newLocation int) bool 
 
 	return v.SeatsRemaining >= guestsAtLocation && underThreeStops
 }
+
+func (rm *RouteManager) DetermineGuestsInvolved(e *Event, lr *LocationRegistry) {
+
+	for i := range rm.Vehicles {
+		v := &rm.Vehicles[i]
+
+		var nodeVisited []int
+		for elem := v.Route.List.Front(); elem != nil; elem = elem.Next() {
+			nodeVisited = append(nodeVisited, elem.Value.(int))
+		}
+
+		addresses := determineAddressesVisited(nodeVisited)
+		v.findGuests(addresses, e, lr)
+	}
+
+}
+
+func (v *Vehicle) findGuests(addresses []string, e *Event, lr *LocationRegistry) {
+	var guestsInvolved []Guest
+	for _, addr := range addresses {
+		coord := lr.CoordianteMap.CoordinateToAddress[addr]
+		for _, g := range e.Guests {
+			if g.Coordinates.Long == coord.Long && g.Coordinates.Lat == coord.Lat {
+				guestsInvolved = append(guestsInvolved, g)
+			}
+		}
+	}
+	v.Guests = guestsInvolved
+}
+
+func determineAddressesVisited(nodeVisited []int) []string {
+	result := make([]string, 0, len(nodeVisited))
+	for _, idx := range nodeVisited {
+		result = append(result, addressOrder[idx])
+	}
+	return result
+}

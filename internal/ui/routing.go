@@ -104,6 +104,8 @@ func ProcessJsonEvent() *RoutingProcess {
 	// Start Route Dispatch Algorithm
 	RouteManager.StartRouteDispatch()
 
+	RouteManager.DetermineGuestsInvolved(&appEvent, &lr)
+
 	RouteManager.Display(&appEvent, &lr)
 
 	return &RoutingProcess{
