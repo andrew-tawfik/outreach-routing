@@ -6,9 +6,17 @@ import (
 	"log"
 )
 
+type ClarkeWright struct {
+	savingList savingsList // Heap of savings values for Clarke-Wright algorithm
+}
+
+func (cw *ClarkeWright) GetName() string {
+	return "Clarke-Wright Savings"
+}
+
 // DetermineSavingList computes the "savings" between all possible guest pairs
 // and populates the priority queue (heap) used to decide which routes to build first.
-func (rm *RouteManager) DetermineSavingList(lr *LocationRegistry) {
+func (cw *ClarkeWright) determineSavingList(lr *LocationRegistry) {
 	var value float64
 	for i := range lr.DistanceMatrix {
 		for j := range lr.DistanceMatrix[i] {
@@ -17,7 +25,7 @@ func (rm *RouteManager) DetermineSavingList(lr *LocationRegistry) {
 				continue
 			}
 			value = lr.retreiveValueFromPair(i, j)
-			rm.addToSavingsList(i, j, value)
+			cw.addToSavingsList(i, j, value)
 		}
 	}
 }
@@ -35,20 +43,22 @@ func (lr *LocationRegistry) retreiveValueFromPair(i, j int) float64 {
 }
 
 // addToSavingsList pushes a new savings record onto the heap (priority queue)
-func (rm *RouteManager) addToSavingsList(first, second int, value float64) {
+func (cw *ClarkeWright) addToSavingsList(first, second int, value float64) {
 	newSaving := saving{
 		i:     first,
 		j:     second,
 		value: value,
 	}
-	heap.Push(&rm.SavingList, newSaving)
+	heap.Push(&cw.savingList, newSaving)
 }
 
 // StartRouteDispatch performs the Clarke-Wright dispatch loop,
 // consuming the savings list in descending order and assigning locations to vehicles.
-func (rm *RouteManager) StartRouteDispatch() {
-	for rm.SavingList.Len() > 0 {
-		saving := heap.Pop(&rm.SavingList).(saving)
+func (cw *ClarkeWright) StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) error {
+	cw.InitSavings(lr)
+
+	for cw.savingList.Len() > 0 {
+		saving := heap.Pop(&cw.savingList).(saving)
 
 		assignedI := rm.ServedDestinations[saving.i]
 		assignedJ := rm.ServedDestinations[saving.j]
@@ -77,6 +87,7 @@ func (rm *RouteManager) StartRouteDispatch() {
 			rm.canAttachToRoute(vehicleIndex, saving.i, saving.j)
 		}
 	}
+	return nil // TODO error handling
 }
 
 // initializeSoloRoute assigns a single location to a new vehicle route
@@ -139,4 +150,11 @@ func (rm *RouteManager) update(vehicleIndex, location int) {
 	v.Route.DestinationCount++
 	v.SeatsRemaining -= rm.DestinationGuestCount[location]
 	rm.ServedDestinations[location] = vehicleIndex
+}
+
+func (cw *ClarkeWright) InitSavings(lr *LocationRegistry) {
+	savings := &savingsList{}
+	heap.Init(savings)
+	cw.savingList = *savings
+	cw.determineSavingList(lr)
 }

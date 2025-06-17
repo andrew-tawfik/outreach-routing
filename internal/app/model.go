@@ -1,7 +1,6 @@
 package app
 
 import (
-	"container/heap"
 	"container/list"
 )
 
@@ -23,7 +22,6 @@ type RouteManager struct {
 	Vehicles              []Vehicle   // List of available vehicles
 	ServedDestinations    map[int]int // Maps destination index to assigned vehicle index
 	DestinationGuestCount []int       // Number of guests at each destination index
-	SavingList            savingsList // Heap of savings values for Clarke-Wright algorithm
 }
 
 // maxVehicleSeats defines the seat capacity of each vehicle
@@ -32,9 +30,14 @@ var maxVehicleSeats int = 4
 // addressOrder is a temporary global variable used for displaying purposes
 var addressOrder []string
 
+type VRPAlgorithm interface {
+	StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) error
+	GetName() string
+}
+
 // CreateRouteManager initializes a RouteManager instance from a LocationRegistry and
 // number of available vehicles. It sets up guest counts, initializes vehicles, and prepares the savings heap.
-func CreateRouteManager(lr *LocationRegistry) *RouteManager {
+func OrchestateDispatch(lr *LocationRegistry, e *Event) *RouteManager {
 
 	ao := &lr.CoordianteMap.AddressOrder
 	destinationCount := &lr.CoordianteMap.DestinationOccupancy
@@ -52,17 +55,23 @@ func CreateRouteManager(lr *LocationRegistry) *RouteManager {
 
 	// Create vehicles and initialize the savings heap
 	vehicles := make([]Vehicle, 0, 10)
-	savings := &savingsList{}
-	heap.Init(savings)
 
 	addressOrder = lr.CoordianteMap.AddressOrder
 
-	return &RouteManager{
+	rm := &RouteManager{
 		Vehicles:              vehicles,
 		ServedDestinations:    servedDestinations,
 		DestinationGuestCount: destinationGuestCount,
-		SavingList:            *savings,
 	}
+
+	var strategy VRPAlgorithm
+	if e.EventType == "Dinner" {
+		strategy = &ClarkeWright{}
+	} else {
+		//strategy = Grocery
+	}
+	strategy.StartRouteDispatch(rm, lr)
+	return rm
 }
 
 // createVehicles returns a slice of Vehicles, each initialized with max seats and an empty route.

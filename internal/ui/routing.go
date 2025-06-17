@@ -65,17 +65,7 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 		log.Println("Data saved to data.json for testing")
 	}
 
-	// Initialize the route manager
-	RouteManager := app.CreateRouteManager(lr)
-
-	// Determine savings between guest pairings using Clarke-Wright Algorithm
-	RouteManager.DetermineSavingList(lr)
-
-	// Start Route Dispatch Algorithm
-	RouteManager.StartRouteDispatch()
-
-	// // Display Results
-	// RouteManager.Display(appEvent, lr)
+	RouteManager := app.OrchestateDispatch(lr, appEvent)
 
 	return &RoutingProcess{
 		rm: RouteManager,
@@ -95,14 +85,7 @@ func ProcessJsonEvent() *RoutingProcess {
 		log.Fatalf("Could not load json event information. ")
 	}
 
-	// Initialize the route manager
-	RouteManager := app.CreateRouteManager(&lr)
-
-	// Determine savings between guest pairings using Clarke-Wright Algorithm
-	RouteManager.DetermineSavingList(&lr)
-
-	// Start Route Dispatch Algorithm
-	RouteManager.StartRouteDispatch()
+	RouteManager := app.OrchestateDispatch(&lr, &appEvent)
 
 	RouteManager.DetermineGuestsInvolved(&appEvent, &lr)
 
