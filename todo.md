@@ -1,4 +1,4 @@
-Goal to get as close to inspo as possible
-
-
-Ticket: Fix guest widget, make sure no word overboard
+1. Add vrp algorithm for Grocery Events
+2. Maps (Google)
+3. Add alerts for api request failues anything out of my control
+4. Google Maps Route api for distance matrix instead of OSRM
