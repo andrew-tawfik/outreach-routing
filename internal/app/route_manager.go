@@ -71,6 +71,8 @@ func OrchestateDispatch(lr *LocationRegistry, e *Event) *RouteManager {
 		//strategy = Grocery
 	}
 	strategy.StartRouteDispatch(rm, lr)
+
+	rm.determineGuestsInvolved(e, lr)
 	return rm
 }
 

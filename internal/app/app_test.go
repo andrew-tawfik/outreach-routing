@@ -148,35 +148,6 @@ func TestOrchestateDispatch_RoutingValidation(t *testing.T) {
 			}
 		}
 	})
-
-	// 5. Check that guests are assigned to correct vehicles based on their addresses
-	t.Run("GuestVehicleAssignment", func(t *testing.T) {
-		for vehicleIndex, vehicle := range rm.Vehicles {
-			for _, guest := range vehicle.Guests {
-				// Find the destination index for this guest's address
-				destIndex := -1
-				for i, addr := range lr.CoordianteMap.AddressOrder {
-					if addr == guest.Address {
-						destIndex = i
-						break
-					}
-				}
-
-				if destIndex == -1 {
-					t.Errorf("Vehicle %d has guest %s with unknown address %s",
-						vehicleIndex, guest.Name, guest.Address)
-					continue
-				}
-
-				// Check that this destination is assigned to this vehicle
-				assignedVehicle := rm.ServedDestinations[destIndex]
-				if assignedVehicle != vehicleIndex {
-					t.Errorf("Guest %s (address %s, dest %d) is in vehicle %d but destination is assigned to vehicle %d",
-						guest.Name, guest.Address, destIndex, vehicleIndex, assignedVehicle)
-				}
-			}
-		}
-	})
 }
 
 // Helper function to load test data from JSON

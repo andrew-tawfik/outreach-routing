@@ -118,7 +118,7 @@ func (rm *RouteManager) enoughSeatsToExtend(vehicleIndex, newLocation int) bool 
 	return v.SeatsRemaining >= guestsAtLocation && underThreeStops
 }
 
-func (rm *RouteManager) DetermineGuestsInvolved(e *Event, lr *LocationRegistry) {
+func (rm *RouteManager) determineGuestsInvolved(e *Event, lr *LocationRegistry) {
 
 	for i := range rm.Vehicles {
 		v := &rm.Vehicles[i]

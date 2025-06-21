@@ -87,8 +87,6 @@ func ProcessJsonEvent() *RoutingProcess {
 
 	RouteManager := app.OrchestateDispatch(&lr, &appEvent)
 
-	RouteManager.DetermineGuestsInvolved(&appEvent, &lr)
-
 	RouteManager.Display(&appEvent, &lr)
 
 	return &RoutingProcess{
