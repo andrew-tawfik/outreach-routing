@@ -12,11 +12,18 @@ import (
 
 type Kmeans struct {
 	Clusters []Cluster
+	points   []Point
 }
 
 type Cluster struct {
 	centroid coordinates.GuestCoordinates
 	vehicle  *Vehicle
+	index    int
+}
+
+type Point struct {
+	guestCoordinate coordinates.GuestCoordinates
+	cluster         *Cluster
 }
 
 func (km *Kmeans) GetName() string {
@@ -61,20 +68,20 @@ func (km *Kmeans) init(lr *LocationRegistry, rm *RouteManager) {
 }
 
 func (km *Kmeans) determineCentroids(lr *LocationRegistry) error {
-	allGuestCoordinates := retreiveUniqueGuestCoordinates(lr) // this is my data
+	km.retreiveUniqueGuestCoordinates(lr) // this is my data
 	centroids := make([]*coordinates.GuestCoordinates, 0)
 
-	randomIndex := rand.Intn(len(allGuestCoordinates))
-	km.Clusters[0].centroid = allGuestCoordinates[randomIndex]
+	randomIndex := rand.Intn(len(km.points))
+	km.Clusters[0].centroid = km.points[randomIndex].guestCoordinate
 	centroids = append(centroids, &km.Clusters[0].centroid) // append random element to centroids list
 
 	for i := 1; i < len(km.Clusters); i++ {
 
-		minSqDistances := make([]float64, 0, len(allGuestCoordinates))
-		for _, x := range allGuestCoordinates {
+		minSqDistances := make([]float64, 0, len(km.points))
+		for _, x := range km.points {
 			min := 9999.99
 			for _, c := range centroids {
-				sq_dist := sqDist(x, *c)
+				sq_dist := sqDist(x.guestCoordinate, *c)
 				if sq_dist < min {
 					min = sq_dist
 				}
@@ -90,7 +97,7 @@ func (km *Kmeans) determineCentroids(lr *LocationRegistry) error {
 		if err != nil {
 			return fmt.Errorf("unexpected error in centroid determination: %v", err)
 		}
-		km.Clusters[i].centroid = allGuestCoordinates[randomGCIndex]
+		km.Clusters[i].centroid = km.points[randomGCIndex].guestCoordinate
 		centroids = append(centroids, &km.Clusters[i].centroid)
 	}
 	return nil
@@ -155,11 +162,38 @@ func sumSqDist(numbers []float64) float64 {
 	return sum
 }
 
-func retreiveUniqueGuestCoordinates(lr *LocationRegistry) []coordinates.GuestCoordinates {
-	allGuestCoordinates := make([]coordinates.GuestCoordinates, 0)
+func (km *Kmeans) retreiveUniqueGuestCoordinates(lr *LocationRegistry) {
+	allPoints := make([]Point, 0)
 
 	for gc := range lr.CoordianteMap.DestinationOccupancy {
-		allGuestCoordinates = append(allGuestCoordinates, gc)
+		allPoints = append(allPoints, Point{guestCoordinate: gc})
 	}
-	return allGuestCoordinates
+
+	km.points = allPoints
+}
+
+func (km *Kmeans) clusterData(rm *RouteManager) {
+	hasChanged := true
+
+	// populate the clusters
+	for hasChanged {
+		for i, p := range km.points {
+
+			min := math.Inf(1)
+			var closestCluster int
+			for j, cluster := range km.Clusters {
+				distance := sqDist(p.guestCoordinate, cluster.centroid)
+				if distance < min {
+					min = distance
+					closestCluster = j
+				}
+			}
+
+			if km.points[i].cluster != closestCluster {
+				km.points[i].cluster = &km.Clusters[closestCluster]
+			}
+
+		}
+
+	}
 }

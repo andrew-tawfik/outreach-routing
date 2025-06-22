@@ -68,7 +68,7 @@ func OrchestateDispatch(lr *LocationRegistry, e *Event) *RouteManager {
 	if e.EventType == "Dinner" {
 		strategy = &ClarkeWright{}
 	} else {
-		//strategy = Grocery
+		strategy = &Kmeans{}
 	}
 	strategy.StartRouteDispatch(rm, lr)
 
@@ -76,8 +76,18 @@ func OrchestateDispatch(lr *LocationRegistry, e *Event) *RouteManager {
 	return rm
 }
 
-// createVehicles returns a slice of Vehicles, each initialized with max seats and an empty route.
-func (rm *RouteManager) addNewVehicle() {
-	newVehicle := Vehicle{SeatsRemaining: maxVehicleSeats}
-	rm.Vehicles = append(rm.Vehicles, newVehicle)
+func (rm *RouteManager) determineGuestsInvolved(e *Event, lr *LocationRegistry) {
+
+	for i := range rm.Vehicles {
+		v := &rm.Vehicles[i]
+
+		var nodeVisited []int
+		for elem := v.Route.List.Front(); elem != nil; elem = elem.Next() {
+			nodeVisited = append(nodeVisited, elem.Value.(int))
+		}
+
+		addresses := determineAddressesVisited(nodeVisited)
+		v.findGuests(addresses, e, lr)
+	}
+
 }
