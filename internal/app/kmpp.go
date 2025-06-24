@@ -40,6 +40,8 @@ func (km *Kmeans) StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) err
 	}
 
 	// perform standard k means
+	km.clusterData()
+	km.determineVehicleRoutes()
 
 	// traveling sales person algorithm per cluster
 
@@ -51,18 +53,17 @@ func (km *Kmeans) StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) err
 func (km *Kmeans) init(lr *LocationRegistry, rm *RouteManager) {
 	totalDestinationCount := 0
 
-	for range lr.CoordianteMap.AddressOrder {
+	for range lr.CoordianteMap.DestinationOccupancy {
 		totalDestinationCount += 1
 	}
 
 	vehicleCount := (totalDestinationCount + 2) / 3
 
 	for i := 0; i < vehicleCount; i++ {
-		newVehicle := Vehicle{}
-		newVehicle.Route.List = list.New()
+		newVehicle := Vehicle{Route: Route{List: list.New()}}
 		rm.Vehicles = append(rm.Vehicles, newVehicle)
 
-		newCluster := Cluster{vehicle: &rm.Vehicles[i]}
+		newCluster := Cluster{vehicle: &rm.Vehicles[i], index: i}
 		km.Clusters = append(km.Clusters, newCluster)
 	}
 }
@@ -172,7 +173,7 @@ func (km *Kmeans) retreiveUniqueGuestCoordinates(lr *LocationRegistry) {
 	km.points = allPoints
 }
 
-func (km *Kmeans) clusterData(rm *RouteManager) {
+func (km *Kmeans) clusterData() {
 	hasChanged := true
 
 	// populate the clusters
@@ -181,19 +182,27 @@ func (km *Kmeans) clusterData(rm *RouteManager) {
 
 			min := math.Inf(1)
 			var closestCluster int
-			for j, cluster := range km.Clusters {
+			for _, cluster := range km.Clusters {
 				distance := sqDist(p.guestCoordinate, cluster.centroid)
 				if distance < min {
 					min = distance
-					closestCluster = j
+					closestCluster = cluster.index
 				}
 			}
 
-			if km.points[i].cluster != closestCluster {
+			if km.points[i].cluster == nil || km.points[i].cluster.index != closestCluster {
 				km.points[i].cluster = &km.Clusters[closestCluster]
+				hasChanged = true
+			} else {
+				hasChanged = false
 			}
-
 		}
+	}
+}
 
+func (km *Kmeans) determineVehicleRoutes() {
+	for i, p := range km.points {
+		p.cluster.vehicle.Route.List.PushBack(i)
+		fmt.Printf("\nAdded Point %d to Vehicle %d", i, p.cluster.index)
 	}
 }

@@ -80,7 +80,7 @@ func (rp *RoutingProcess) String() string {
 
 func ProcessJsonEvent() *RoutingProcess {
 
-	appEvent, lr, err := app.LoadAppDataFromFile("data.json")
+	appEvent, lr, err := app.LoadAppDataFromFile("data_grocery.json")
 	if err != nil {
 		log.Fatalf("Could not load json event information. ")
 	}
