@@ -16,14 +16,15 @@ type Kmeans struct {
 }
 
 type Cluster struct {
-	centroid coordinates.GuestCoordinates
-	vehicle  *Vehicle
-	index    int
+	centroid  coordinates.GuestCoordinates
+	vehicle   *Vehicle
+	index     int
+	bestThree []*Point
 }
 
 type Point struct {
 	guestCoordinate coordinates.GuestCoordinates
-	cluster         *Cluster
+	clusterIndex    int
 }
 
 func (km *Kmeans) GetName() string {
@@ -174,35 +175,137 @@ func (km *Kmeans) retreiveUniqueGuestCoordinates(lr *LocationRegistry) {
 }
 
 func (km *Kmeans) clusterData() {
-	hasChanged := true
+	maxIterations := 100 // Prevent infinite loops
 
-	// populate the clusters
-	for hasChanged {
-		for i, p := range km.points {
+	// Initialize all points to cluster -1 (unassigned)
+	for i := range km.points {
+		km.points[i].clusterIndex = -1
+	}
 
-			min := math.Inf(1)
-			var closestCluster int
-			for _, cluster := range km.Clusters {
-				distance := sqDist(p.guestCoordinate, cluster.centroid)
-				if distance < min {
-					min = distance
-					closestCluster = cluster.index
+	for iteration := 0; iteration < maxIterations; iteration++ {
+		hasChanged := false
+
+		// Clear existing assignments
+		for i := range km.Clusters {
+			km.Clusters[i].bestThree = make([]*Point, 0, 3)
+		}
+
+		// Assign each point to the closest cluster (with capacity constraint)
+		for i := range km.points {
+			point := &km.points[i]
+			bestClusterIndex, replacePosition := km.findBestClusterForPoint(point)
+
+			if bestClusterIndex != -1 {
+				cluster := &km.Clusters[bestClusterIndex]
+
+				if replacePosition != -1 {
+					// Replace the point at the specified position
+					cluster.bestThree[replacePosition] = point
+				} else {
+					// Add to cluster (has space)
+					cluster.bestThree = append(cluster.bestThree, point)
+				}
+
+				if point.clusterIndex != bestClusterIndex {
+					point.clusterIndex = bestClusterIndex
+					hasChanged = true
 				}
 			}
+		}
 
-			if km.points[i].cluster == nil || km.points[i].cluster.index != closestCluster {
-				km.points[i].cluster = &km.Clusters[closestCluster]
-				hasChanged = true
-			} else {
-				hasChanged = false
-			}
+		// Recalculate centroids
+		km.recalculateCentroids()
+
+		// If no assignments changed, we've converged
+		if !hasChanged {
+			break
 		}
 	}
 }
 
+func (km *Kmeans) findBestClusterForPoint(point *Point) (int, int) {
+	bestClusterIndex := -1
+	replacePosition := -1
+	minDistance := math.Inf(1)
+
+	// Try to find the best available cluster
+	for i := range km.Clusters {
+		cluster := &km.Clusters[i]
+		distance := sqDist(point.guestCoordinate, cluster.centroid)
+
+		// If cluster has space and this is the closest so far
+		if len(cluster.bestThree) < 3 && distance < minDistance {
+			minDistance = distance
+			bestClusterIndex = i
+			replacePosition = -1 // No replacement needed, just append
+		}
+	}
+
+	// If no cluster with space was found, try to replace in existing clusters
+	if bestClusterIndex == -1 {
+		for i := range km.Clusters {
+			cluster := &km.Clusters[i]
+			distance := sqDist(point.guestCoordinate, cluster.centroid)
+
+			if len(cluster.bestThree) == 3 {
+				// Find the farthest point in this cluster
+				farthestIndex, farthestDistance := km.findFarthestPointInCluster(cluster)
+
+				// If current point is closer than the farthest point in cluster
+				if distance < farthestDistance && distance < minDistance {
+					minDistance = distance
+					bestClusterIndex = i
+					replacePosition = farthestIndex
+				}
+			}
+		}
+	}
+
+	return bestClusterIndex, replacePosition
+}
+
+func (km *Kmeans) findFarthestPointInCluster(cluster *Cluster) (int, float64) {
+	farthestIndex := -1
+	farthestDistance := 0.0
+
+	for i, p := range cluster.bestThree {
+		distance := sqDist(p.guestCoordinate, cluster.centroid)
+		if distance > farthestDistance {
+			farthestDistance = distance
+			farthestIndex = i
+		}
+	}
+
+	return farthestIndex, farthestDistance
+}
+
+func (km *Kmeans) recalculateCentroids() {
+	for i := range km.Clusters {
+		cluster := &km.Clusters[i]
+
+		if len(cluster.bestThree) == 0 {
+			continue // Keep existing centroid if no points assigned
+		}
+
+		var sumLat, sumLong float64
+		for _, point := range cluster.bestThree {
+			sumLat += point.guestCoordinate.Lat
+			sumLong += point.guestCoordinate.Long
+		}
+
+		// Update centroid to average of assigned points
+		cluster.centroid.Lat = sumLat / float64(len(cluster.bestThree))
+		cluster.centroid.Long = sumLong / float64(len(cluster.bestThree))
+	}
+}
+
+// Updated determineVehicleRoutes to work with the new structure
 func (km *Kmeans) determineVehicleRoutes() {
-	for i, p := range km.points {
-		p.cluster.vehicle.Route.List.PushBack(i)
-		fmt.Printf("\nAdded Point %d to Vehicle %d", i, p.cluster.index)
+	for i, point := range km.points {
+		if point.clusterIndex >= 0 && point.clusterIndex < len(km.Clusters) {
+			cluster := &km.Clusters[point.clusterIndex]
+			cluster.vehicle.Route.List.PushBack(i)
+			fmt.Printf("\nAdded Point %d to Vehicle %d", i, cluster.index)
+		}
 	}
 }
