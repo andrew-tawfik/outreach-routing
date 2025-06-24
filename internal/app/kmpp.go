@@ -34,8 +34,8 @@ func (km *Kmeans) GetName() string {
 func (km *Kmeans) StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) error {
 
 	// Create k means object
-	km.init(lr, rm)
-	err := km.determineCentroids(lr)
+	km.init(rm)
+	err := km.determineCentroids(rm)
 	if err != nil {
 		return err
 	}
@@ -51,10 +51,10 @@ func (km *Kmeans) StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) err
 	return nil
 }
 
-func (km *Kmeans) init(lr *LocationRegistry, rm *RouteManager) {
+func (km *Kmeans) init(rm *RouteManager) {
 	totalDestinationCount := 0
 
-	for range lr.CoordianteMap.DestinationOccupancy {
+	for range rm.CoordinateList {
 		totalDestinationCount += 1
 	}
 
@@ -69,8 +69,8 @@ func (km *Kmeans) init(lr *LocationRegistry, rm *RouteManager) {
 	}
 }
 
-func (km *Kmeans) determineCentroids(lr *LocationRegistry) error {
-	km.retreiveUniqueGuestCoordinates(lr) // this is my data
+func (km *Kmeans) determineCentroids(rm *RouteManager) error {
+	km.retreiveUniqueGuestCoordinates(rm) // this is my data
 	centroids := make([]*coordinates.GuestCoordinates, 0)
 
 	randomIndex := rand.Intn(len(km.points))
@@ -164,10 +164,10 @@ func sumSqDist(numbers []float64) float64 {
 	return sum
 }
 
-func (km *Kmeans) retreiveUniqueGuestCoordinates(lr *LocationRegistry) {
+func (km *Kmeans) retreiveUniqueGuestCoordinates(rm *RouteManager) {
 	allPoints := make([]Point, 0)
 
-	for gc := range lr.CoordianteMap.DestinationOccupancy {
+	for _, gc := range rm.CoordinateList {
 		allPoints = append(allPoints, Point{guestCoordinate: gc})
 	}
 
@@ -264,6 +264,11 @@ func (km *Kmeans) findBestClusterForPoint(point *Point) (int, int) {
 	return bestClusterIndex, replacePosition
 }
 
+// Case 1: Cluster has less than 3. Add the points
+// Case 2: Cluster already has 3.
+// 		2a. If farther than the 3: Skip this Cluster look for the next smallest and available Cluster
+// 		2b. If closer than one of the three, replace the farthest one of the three
+
 func (km *Kmeans) findFarthestPointInCluster(cluster *Cluster) (int, float64) {
 	farthestIndex := -1
 	farthestDistance := 0.0
@@ -299,13 +304,11 @@ func (km *Kmeans) recalculateCentroids() {
 	}
 }
 
-// Updated determineVehicleRoutes to work with the new structure
 func (km *Kmeans) determineVehicleRoutes() {
 	for i, point := range km.points {
 		if point.clusterIndex >= 0 && point.clusterIndex < len(km.Clusters) {
 			cluster := &km.Clusters[point.clusterIndex]
 			cluster.vehicle.Route.List.PushBack(i)
-			fmt.Printf("\nAdded Point %d to Vehicle %d", i, cluster.index)
 		}
 	}
 }

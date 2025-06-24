@@ -2,6 +2,8 @@ package app
 
 import (
 	"container/list"
+
+	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
 // Route holds the doubly-linked list of destination indices assigned to a vehicle.
@@ -22,6 +24,7 @@ type RouteManager struct {
 	Vehicles              []Vehicle   // List of available vehicles
 	ServedDestinations    map[int]int // Maps destination index to assigned vehicle index
 	DestinationGuestCount []int       // Number of guests at each destination index
+	CoordinateList        []coordinates.GuestCoordinates
 }
 
 // maxVehicleSeats defines the seat capacity of each vehicle
@@ -63,6 +66,7 @@ func OrchestateDispatch(lr *LocationRegistry, e *Event) *RouteManager {
 		ServedDestinations:    servedDestinations,
 		DestinationGuestCount: destinationGuestCount,
 	}
+	rm.createCoordinateList(lr)
 
 	var strategy VRPAlgorithm
 	if e.EventType == "Dinner" {
@@ -89,5 +93,18 @@ func (rm *RouteManager) determineGuestsInvolved(e *Event, lr *LocationRegistry) 
 		addresses := determineAddressesVisited(nodeVisited)
 		v.findGuests(addresses, e, lr)
 	}
+
+}
+
+func (rm *RouteManager) createCoordinateList(lr *LocationRegistry) {
+	ao := lr.CoordianteMap.AddressOrder
+	coorList := make([]coordinates.GuestCoordinates, 0, len(ao))
+
+	for i := 1; i < len(ao); i++ {
+		s := ao[i]
+		coor := lr.CoordianteMap.CoordinateToAddress[s]
+		coorList = append(coorList, coor)
+	}
+	rm.CoordinateList = coorList
 
 }

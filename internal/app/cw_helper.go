@@ -134,7 +134,7 @@ func (v *Vehicle) findGuests(addresses []string, e *Event, lr *LocationRegistry)
 func determineAddressesVisited(nodeVisited []int) []string {
 	result := make([]string, 0, len(nodeVisited))
 	for _, idx := range nodeVisited {
-		result = append(result, addressOrder[idx])
+		result = append(result, addressOrder[idx+1])
 	}
 	return result
 }
