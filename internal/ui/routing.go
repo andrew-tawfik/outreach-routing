@@ -79,12 +79,23 @@ func (rp *RoutingProcess) String() string {
 	return rp.rm.Display(rp.ae, rp.lr)
 }
 
-func ProcessJsonEvent() (*RoutingProcess, error) {
+func ProcessJsonEvent(eventType int) (*RoutingProcess, error) {
 
-	appEvent, lr, err := app.LoadAppDataFromFile("data_grocery.json")
-	if err != nil {
-		return nil, fmt.Errorf("Could not load json event information. %w", err)
+	var appEvent app.Event
+	var lr app.LocationRegistry
+	var err error
+	if eventType == 0 {
+		appEvent, lr, err = app.LoadAppDataFromFile("data_dinner.json")
+		if err != nil {
+			return nil, fmt.Errorf("Could not load json event information. %w", err)
+		}
+	} else {
+		appEvent, lr, err = app.LoadAppDataFromFile("data_grocery.json")
+		if err != nil {
+			return nil, fmt.Errorf("Could not load json event information. %w", err)
+		}
 	}
+	
 
 	RouteManager := app.OrchestateDispatch(&lr, &appEvent)
 

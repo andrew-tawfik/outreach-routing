@@ -131,10 +131,14 @@ func (v *Vehicle) findGuests(addresses []string, e *Event, lr *LocationRegistry)
 	v.Guests = guestsInvolved
 }
 
-func determineAddressesVisited(nodeVisited []int) []string {
+func determineAddressesVisited(nodeVisited []int, e *Event) []string {
+	adj := 0
+	if e.EventType == "Grocery" {
+		adj++
+	}
 	result := make([]string, 0, len(nodeVisited))
 	for _, idx := range nodeVisited {
-		result = append(result, addressOrder[idx+1])
+		result = append(result, addressOrder[idx+adj])
 	}
 	return result
 }

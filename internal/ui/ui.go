@@ -25,14 +25,14 @@ func (cfg *Config) MakeUI() {
 	var currentGrid *VehicleGrid // Store reference to current grid
 
 	runButton := widget.NewButton("Run", func() {
-		// rp, err := ProcessJsonEvent()
+		// rp, err := ProcessEvent(urlEntry.Text)
 		// if err != nil {
-		// 	fmt.Println(" will post notification")
+		// 	fmt.Println(err.Error())
 		// }
 
-		rp, err := ProcessEvent(urlEntry.Text)
+		rp, err := ProcessJsonEvent(0)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println(" will post notification")
 		} else {
 			cfg.Rp = rp
 			outputEntry.SetText(cfg.Rp.String())

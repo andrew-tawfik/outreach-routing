@@ -90,7 +90,7 @@ func (rm *RouteManager) determineGuestsInvolved(e *Event, lr *LocationRegistry) 
 			nodeVisited = append(nodeVisited, elem.Value.(int))
 		}
 
-		addresses := determineAddressesVisited(nodeVisited)
+		addresses := determineAddressesVisited(nodeVisited, e)
 		v.findGuests(addresses, e, lr)
 	}
 
