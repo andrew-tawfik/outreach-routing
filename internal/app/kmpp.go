@@ -24,6 +24,7 @@ type Cluster struct {
 
 type Point struct {
 	guestCoordinate coordinates.GuestCoordinates
+	address         string
 	clusterIndex    int
 }
 
@@ -35,7 +36,7 @@ func (km *Kmeans) StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) err
 
 	// Create k means object
 	km.init(rm)
-	err := km.determineCentroids(rm)
+	err := km.determineCentroids(rm, lr)
 	if err != nil {
 		return err
 	}
@@ -43,6 +44,7 @@ func (km *Kmeans) StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) err
 	// perform standard k means
 	km.clusterData()
 	km.determineVehicleRoutes()
+	// km.printDistances()
 
 	// traveling sales person algorithm per cluster
 
@@ -58,7 +60,7 @@ func (km *Kmeans) init(rm *RouteManager) {
 		totalDestinationCount += 1
 	}
 
-	vehicleCount := (totalDestinationCount + 2) / 3
+	vehicleCount := ((totalDestinationCount + 2) / 3)
 
 	for i := 0; i < vehicleCount; i++ {
 		newVehicle := Vehicle{Route: Route{List: list.New()}}
@@ -69,8 +71,8 @@ func (km *Kmeans) init(rm *RouteManager) {
 	}
 }
 
-func (km *Kmeans) determineCentroids(rm *RouteManager) error {
-	km.retreiveUniqueGuestCoordinates(rm) // this is my data
+func (km *Kmeans) determineCentroids(rm *RouteManager, lr *LocationRegistry) error {
+	km.retreiveUniqueGuestCoordinates(rm, lr) // this is my data
 	centroids := make([]*coordinates.GuestCoordinates, 0)
 
 	randomIndex := rand.Intn(len(km.points))
@@ -156,6 +158,15 @@ func sqDist(point, centroid coordinates.GuestCoordinates) float64 {
 	return dist
 }
 
+func dist(point, centroid coordinates.GuestCoordinates) float64 {
+	x1, y1 := point.Long, point.Lat
+	x2, y2 := centroid.Long, centroid.Lat
+
+	dist := math.Sqrt((math.Pow(x2-x1, 2)) + (math.Pow(y2-y1, 2)))
+
+	return dist
+}
+
 func sumSqDist(numbers []float64) float64 {
 	var sum float64 = 0
 	for _, num := range numbers {
@@ -164,11 +175,14 @@ func sumSqDist(numbers []float64) float64 {
 	return sum
 }
 
-func (km *Kmeans) retreiveUniqueGuestCoordinates(rm *RouteManager) {
+func (km *Kmeans) retreiveUniqueGuestCoordinates(rm *RouteManager, lr *LocationRegistry) {
 	allPoints := make([]Point, 0)
 
+	i := 1
 	for _, gc := range rm.CoordinateList {
-		allPoints = append(allPoints, Point{guestCoordinate: gc})
+		addr := lr.CoordianteMap.AddressOrder[i]
+		allPoints = append(allPoints, Point{guestCoordinate: gc, address: addr})
+		i++
 	}
 
 	km.points = allPoints
@@ -231,7 +245,7 @@ func (km *Kmeans) findBestClusterForPoint(point *Point) (int, int) {
 	// Try to find the best available cluster
 	for i := range km.Clusters {
 		cluster := &km.Clusters[i]
-		distance := sqDist(point.guestCoordinate, cluster.centroid)
+		distance := dist(point.guestCoordinate, cluster.centroid)
 
 		// If cluster has space and this is the closest so far
 		if len(cluster.bestThree) < 3 && distance < minDistance {
@@ -245,7 +259,7 @@ func (km *Kmeans) findBestClusterForPoint(point *Point) (int, int) {
 	if bestClusterIndex == -1 {
 		for i := range km.Clusters {
 			cluster := &km.Clusters[i]
-			distance := sqDist(point.guestCoordinate, cluster.centroid)
+			distance := dist(point.guestCoordinate, cluster.centroid)
 
 			if len(cluster.bestThree) == 3 {
 				// Find the farthest point in this cluster
@@ -274,7 +288,7 @@ func (km *Kmeans) findFarthestPointInCluster(cluster *Cluster) (int, float64) {
 	farthestDistance := 0.0
 
 	for i, p := range cluster.bestThree {
-		distance := sqDist(p.guestCoordinate, cluster.centroid)
+		distance := dist(p.guestCoordinate, cluster.centroid)
 		if distance > farthestDistance {
 			farthestDistance = distance
 			farthestIndex = i
@@ -310,5 +324,17 @@ func (km *Kmeans) determineVehicleRoutes() {
 			cluster := &km.Clusters[point.clusterIndex]
 			cluster.vehicle.Route.List.PushBack(i)
 		}
+	}
+}
+
+func (km *Kmeans) printDistances() {
+	for _, c := range km.Clusters {
+
+		fmt.Printf("The distance between Centroid of Cluster %d: ", c.index)
+		for _, p := range c.bestThree {
+			f := dist(p.guestCoordinate, c.centroid)
+			fmt.Printf("\n\twith point at address %s %f", p.address, f)
+		}
+		fmt.Println()
 	}
 }
