@@ -1,6 +1,9 @@
 package app
 
-import "github.com/andrew-tawfik/outreach-routing/internal/coordinates"
+import (
+	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
+	"github.com/andrew-tawfik/outreach-routing/internal/geoapi"
+)
 
 // LocationRegistry holds all spatial data necessary for route planning.
 type LocationRegistry struct {
@@ -25,6 +28,7 @@ type GuestCoordinates struct {
 type Event struct {
 	Guests    []Guest
 	EventType string
+	ApiErrors geoapi.ApiErrors
 }
 
 // Guest represents a single person or group needing transportation.

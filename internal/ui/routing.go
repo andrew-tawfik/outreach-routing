@@ -3,6 +3,7 @@ package ui
 import (
 	//"fmt"
 
+	"fmt"
 	"log"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
@@ -16,31 +17,25 @@ type RoutingProcess struct {
 	lr *app.LocationRegistry
 }
 
-func ProcessEvent(googleSheetURL string) *RoutingProcess {
-
-	// // Prompt user for the Google Sheet URL that contains event and guest information
-	// fmt.Println("Please provide Google SheetURL")
-
-	// var googleSheetURL string
-	// fmt.Scanln(&googleSheetURL)
+func ProcessEvent(googleSheetURL string) (*RoutingProcess, error) {
 
 	// Extract the spreadsheet ID from the provided URL
 	spreadsheetID, err := database.ExtractIDFromURL(googleSheetURL)
 
 	if err != nil {
-		log.Fatalf("error extracting ID: %v", err)
+		return nil, fmt.Errorf("error extracting ID: %v", err)
 	}
 
 	// Initialize Google Sheets client
 	db, err := database.NewSheetClient(spreadsheetID)
 	if err != nil {
-		log.Fatalf("could not initialize sheet client: %v", err)
+		return nil, fmt.Errorf("could not initialize sheet client: %v", err)
 	}
 
 	// Parse event and guest data from the sheet
 	event, err := db.ProcessEvent()
 	if err != nil {
-		log.Fatalf("Could not process event: %v", err)
+		return nil, fmt.Errorf("Could not process event: %v", err)
 	}
 
 	// Map database event to geo event structure for coordinate lookup
@@ -50,10 +45,16 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 	geoEvent.FilterGuestForService()
 
 	// Request GPS coordinates for all guest addresses
-	geoEvent.RequestGuestCoordiantes()
+	err = geoEvent.RequestGuestCoordiantes()
+	if err != nil {
+		return nil, fmt.Errorf("could not geocode addresses: %w", err)
+	}
 
 	// Request distance matrix for all coordinates
-	geoEvent.RetreiveDistanceMatrix()
+	err = geoEvent.RetreiveDistanceMatrix()
+	if err != nil {
+		return nil, fmt.Errorf("could not retreive distance matrix: %w", err)
+	}
 
 	// Map geo-level data to app-level event and location registry
 	appEvent, lr := converter.MapDatabaseGeoEventToApp(geoEvent)
@@ -71,18 +72,18 @@ func ProcessEvent(googleSheetURL string) *RoutingProcess {
 		rm: RouteManager,
 		ae: appEvent,
 		lr: lr,
-	}
+	}, nil
 }
 
 func (rp *RoutingProcess) String() string {
 	return rp.rm.Display(rp.ae, rp.lr)
 }
 
-func ProcessJsonEvent() *RoutingProcess {
+func ProcessJsonEvent() (*RoutingProcess, error) {
 
 	appEvent, lr, err := app.LoadAppDataFromFile("data_grocery.json")
 	if err != nil {
-		log.Fatalf("Could not load json event information. ")
+		return nil, fmt.Errorf("Could not load json event information. %w", err)
 	}
 
 	RouteManager := app.OrchestateDispatch(&lr, &appEvent)
@@ -93,6 +94,6 @@ func ProcessJsonEvent() *RoutingProcess {
 		rm: RouteManager,
 		ae: &appEvent,
 		lr: &lr,
-	}
+	}, nil
 
 }

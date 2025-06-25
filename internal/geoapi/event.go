@@ -1,7 +1,7 @@
 package geoapi
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
@@ -34,6 +34,7 @@ type Event struct {
 	Guests         []Guest
 	EventType      string
 	GuestLocations LocationRegistry
+	ApiErrors      ApiErrors
 }
 
 // Location Registry holds the distance matrix and additional coordinate information
@@ -69,7 +70,7 @@ func (e *Event) FilterGuestForService() {
 }
 
 // RequestGuestCoordiantes performs geocoding on all filtered guests
-func (e *Event) RequestGuestCoordiantes() {
+func (e *Event) RequestGuestCoordiantes() error {
 	// Initialize coordinate mapping if empty
 	if e.GuestLocations.CoordianteMap.DestinationOccupancy == nil &&
 		e.GuestLocations.CoordianteMap.CoordinateToAddress == nil {
@@ -79,11 +80,15 @@ func (e *Event) RequestGuestCoordiantes() {
 		e.GuestLocations.CoordianteMap.AddressOrder = make([]string, 0)
 	}
 
+	apiErrors := ApiErrors{
+		FailedGuests: make([]FailedGuest, 0),
+	}
+
 	// Always include the depot location as index 0
 	depotAddr := "555 Parkdale Ave"
 	depotCoor, err := retreiveAddressCoordinate(depotAddr)
 	if err != nil {
-		log.Println("Could not geocode SMSM address: ", err)
+		return fmt.Errorf("failed to geocode SMSM address: %w", err)
 	}
 	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, depotAddr)
 
@@ -94,8 +99,12 @@ func (e *Event) RequestGuestCoordiantes() {
 	for i := range e.Guests {
 		err := e.Guests[i].geocodeGuestAddress()
 		if err != nil {
-			log.Printf("Warning: Failed to find address coordinates: %s. Reason: %v\n Program will proceed, please manually add Guest: %s",
-				e.Guests[i].Address, err, e.Guests[i].Name)
+
+			apiErrors.FailedGuests = append(apiErrors.FailedGuests, FailedGuest{
+				Name:    e.Guests[i].Name,
+				Address: e.Guests[i].Address,
+				Reason:  err.Error(),
+			})
 			continue
 		}
 		coor, unique := e.isUnique(i)
@@ -104,6 +113,8 @@ func (e *Event) RequestGuestCoordiantes() {
 		}
 	}
 
+	e.ApiErrors = apiErrors
+	return nil
 }
 
 // addToCoordListString appends a new semicolon-prefixed coordinate string

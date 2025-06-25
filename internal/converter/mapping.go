@@ -54,6 +54,7 @@ func MapDatabaseGeoEventToApp(geoEvent *geoapi.Event) (*app.Event, *app.Location
 	return &app.Event{
 			Guests:    appGuests,
 			EventType: geoEvent.EventType,
+			ApiErrors: geoEvent.ApiErrors,
 		}, &app.LocationRegistry{
 			DistanceMatrix: geoEvent.GuestLocations.DistanceMatrix,
 			CoordianteMap:  appCoordMap,

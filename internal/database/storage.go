@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,27 +23,26 @@ func NewSheetClient(spreadsheetID string) (*Database, error) {
 	// Compute path relative to current working dir (cmd/)
 	projectRoot, err := filepath.Abs(filepath.Join(".", ".."))
 	if err != nil {
-		log.Fatalln("failed to resolve project root:", err)
+		return nil, fmt.Errorf("failed to resolve project root:", err)
 	}
 	credentialsPath := filepath.Join(projectRoot, "client_secret.json")
 
 	data, err := os.ReadFile(credentialsPath)
 	if err != nil {
-		log.Fatalf("cannot read %s: %v", credentialsPath, err)
+		return nil, fmt.Errorf("cannot read %s: %v", credentialsPath, err)
 	}
 
 	// Create a JWT-based authenticated client using the provided credentials
 	conf, err := google.JWTConfigFromJSON(data, spreadsheet.Scope)
 	if err != nil {
-		log.Fatalln("cannot config from json")
+		return nil, fmt.Errorf("cannot config from json")
 	}
 	client := conf.Client(context.Background())
 	service := spreadsheet.NewServiceWithClient(client)
 
 	sheet, err := service.FetchSpreadsheet(spreadsheetID)
-
 	if err != nil {
-		log.Fatalf("Failed to fetch spreadsheet: %v", err)
+		return nil, fmt.Errorf("Failed to fetch spreadsheet: %v", err)
 	}
 
 	return &Database{sheet: sheet}, nil

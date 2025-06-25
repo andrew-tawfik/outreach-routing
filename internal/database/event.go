@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"gopkg.in/Iwark/spreadsheet.v2"
@@ -22,14 +21,14 @@ func (db *Database) ProcessEvent() (*Event, error) {
 	// Extract and validate event type from sheet title
 	et, err := determineEventType(sheet)
 	if err != nil {
-		log.Fatalf("Please fix spreadsheet title. %v", err)
+		return nil, fmt.Errorf("Please fix spreadsheet title. %v", err)
 	}
 
 	// Ensure the first row contains the correct column headers
 	firstRow := &db.sheet.Sheets[0].Rows[0]
 	err = verifyColumnTitles(firstRow)
 	if err != nil {
-		log.Fatalf("Column title verification failed: %v", err)
+		return nil, fmt.Errorf("Column title verification failed: %v", err)
 	}
 
 	guests := make([]Guest, 0, 30)

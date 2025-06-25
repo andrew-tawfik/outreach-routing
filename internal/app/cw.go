@@ -3,7 +3,7 @@ package app
 import (
 	"container/heap"
 	"container/list"
-	"log"
+	"fmt"
 )
 
 type ClarkeWright struct {
@@ -82,7 +82,7 @@ func (cw *ClarkeWright) StartRouteDispatch(rm *RouteManager, lr *LocationRegistr
 		case (assignedI == -1 && assignedJ != -1) || (assignedI != -1 && assignedJ == -1):
 			vehicleIndex, err := rm.determineVehicle(1, saving.i, saving.j)
 			if err != nil {
-				log.Fatalf("Cannot determine vehicle route: %v", err)
+				return fmt.Errorf("failed to process: %w", err)
 			}
 			rm.canAttachToRoute(vehicleIndex, saving.i, saving.j)
 		}

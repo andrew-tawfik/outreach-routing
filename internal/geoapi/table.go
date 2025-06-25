@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -24,22 +23,21 @@ type Source struct {
 
 // RetreiveDistanceMatrix constructs and sends a request to OSRM.
 // then parses the resulting distance matrix and stores it in the Event.
-func (e *Event) RetreiveDistanceMatrix() {
+func (e *Event) RetreiveDistanceMatrix() error {
 	coordListURL = strings.TrimSuffix(coordListURL, ";")
 	url := buildDistanceMatrixURL(&coordListURL)
 	jsonresp, err := fetchDistanceMatrix(&url)
 	if err != nil {
-		log.Fatalf("%v", err)
+		return fmt.Errorf("%v", err)
 	}
 
 	matrix, err := parseOsrmResponse(&jsonresp)
-
 	if err != nil {
-		log.Fatalf("%v", err)
+		return fmt.Errorf("%v", err)
 	}
 
 	e.GuestLocations.DistanceMatrix = matrix
-
+	return nil
 }
 
 // buildDistanceMatrixURL returns a fully constructed OSRM request URL
