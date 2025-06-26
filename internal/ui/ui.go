@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"image/color"
 	"math"
 
@@ -25,14 +24,17 @@ func (cfg *Config) MakeUI() {
 	var currentGrid *VehicleGrid // Store reference to current grid
 
 	runButton := widget.NewButton("Run", func() {
-		// rp, err := ProcessEvent(urlEntry.Text)
+
+		ShowMessage(cfg.MainWindow)
+
+		// rp, err := ProcessJsonEvent(0)
 		// if err != nil {
-		// 	fmt.Println(err.Error())
+		// 	fmt.Println(" will post notification")
 		// }
 
-		rp, err := ProcessJsonEvent(0)
+		rp, err := ProcessEvent(urlEntry.Text)
 		if err != nil {
-			fmt.Println(" will post notification")
+			ShowErrorNotification(cfg.MainWindow, "Processing Error", err.Error())
 		} else {
 			cfg.Rp = rp
 			outputEntry.SetText(cfg.Rp.String())
@@ -40,6 +42,7 @@ func (cfg *Config) MakeUI() {
 			currentGrid = NewVehicleGrid(cfg.Rp.rm, cfg)
 			cfg.VehicleSection.Objects = []fyne.CanvasObject{currentGrid}
 			cfg.VehicleSection.Refresh()
+
 		}
 	})
 	runButton.Importance = widget.HighImportance
