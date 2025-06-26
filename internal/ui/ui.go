@@ -24,27 +24,50 @@ func (cfg *Config) MakeUI() {
 	var currentGrid *VehicleGrid // Store reference to current grid
 
 	runButton := widget.NewButton("Run", func() {
+		var popup *widget.PopUp
+		var result *RoutingProcess
+		var processErr error
 
-		ShowMessage(cfg.MainWindow)
+		// Step 1: Show popup on UI thread
+		fyne.Do(func() {
+			popup = ShowMessage(cfg.MainWindow)
+			popup.Show()
+		})
 
-		// rp, err := ProcessJsonEvent(0)
-		// if err != nil {
-		// 	fmt.Println(" will post notification")
-		// }
+		// Step 2: Run background work
+		go func() {
+			// Do the heavy lifting
+			//result, processErr = ProcessJsonEvent(0)
+			result, processErr = ProcessEvent(urlEntry.Text)
 
-		rp, err := ProcessEvent(urlEntry.Text)
-		if err != nil {
-			ShowErrorNotification(cfg.MainWindow, "Processing Error", err.Error())
-		} else {
-			cfg.Rp = rp
-			outputEntry.SetText(cfg.Rp.String())
+			// Step 3: Queue UI updates on main thread (thread-safe)
+			fyne.DoAndWait(func() {
+				// Hide the popup
+				if popup != nil {
+					popup.Hide()
+				}
 
-			currentGrid = NewVehicleGrid(cfg.Rp.rm, cfg)
-			cfg.VehicleSection.Objects = []fyne.CanvasObject{currentGrid}
-			cfg.VehicleSection.Refresh()
-
-		}
+				// Show result or error
+				if processErr != nil {
+					fyne.Do(func() {
+						ShowErrorNotification(cfg.MainWindow, "Processing Error", processErr.Error())
+					})
+					return
+				} else {
+					fyne.Do(func() {
+						ShowSuccess(cfg.MainWindow)
+					})
+				}
+				// Populate the UI
+				cfg.Rp = result
+				outputEntry.SetText(result.String())
+				currentGrid = NewVehicleGrid(result.rm, cfg)
+				cfg.VehicleSection.Objects = []fyne.CanvasObject{currentGrid}
+				cfg.VehicleSection.Refresh()
+			})
+		}()
 	})
+
 	runButton.Importance = widget.HighImportance
 	spacer := canvas.NewRectangle(color.Transparent)
 	spacer.SetMinSize(fyne.NewSize(500, 1)) // 1px height to keep it invisible
