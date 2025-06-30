@@ -189,8 +189,8 @@ func (gt *GuestTile) ContainsPosition(pos fyne.Position) bool {
 
 // HighlightAsDropTarget highlights this tile as a valid drop target
 func (gt *GuestTile) HighlightAsDropTarget() {
-	gt.background.FillColor = color.NRGBA{10, 40, 10, 255} // Almost black-green
-	gt.border.StrokeColor = color.NRGBA{0, 120, 0, 255}    // Darker green border
+	gt.background.FillColor = color.NRGBA{R: 76, G: 175, B: 80, A: 255} // Almost black-green
+	gt.border.StrokeColor = color.NRGBA{R: 76, G: 175, B: 80, A: 255}   // Darker green border
 	gt.border.StrokeWidth = 3
 	gt.background.Refresh()
 	gt.border.Refresh()

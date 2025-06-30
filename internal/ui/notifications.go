@@ -70,11 +70,11 @@ func ShowMessage(window fyne.Window) *widget.PopUp {
 func ShowSuccess(window fyne.Window) {
 	title := "Operation Successful: Route Generated"
 
-	bgColor := color.NRGBA{R: 20, G: 60, B: 30, A: 255}
+	bgColor := color.NRGBA{R: 76, G: 175, B: 80, A: 255}
 	background := canvas.NewRectangle(bgColor)
 	background.CornerRadius = 4
-	background.StrokeColor = color.NRGBA{R: 120, G: 120, B: 130, A: 255}
-	background.StrokeWidth = 2
+	background.StrokeColor = color.NRGBA{R: 56, G: 142, B: 60, A: 255}
+	background.StrokeWidth = 1
 
 	messageLabel := widget.NewLabel(title)
 	messageLabel.Alignment = fyne.TextAlignCenter

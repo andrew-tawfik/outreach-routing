@@ -14,6 +14,8 @@ import (
 func (cfg *Config) MakeUI() {
 	// ---- Input & Run ----------------------------------------
 
+	var wrapper *mainContentWrapper
+
 	urlEntry := widget.NewEntry()
 	urlEntry.SetPlaceHolder("https://docs.google.com/spreadsheets/d/...")
 
@@ -37,11 +39,11 @@ func (cfg *Config) MakeUI() {
 		// Step 2: Run background work
 		go func() {
 			// Do the heavy lifting
-			//result, processErr = ProcessJsonEvent(0)
-			result, processErr = ProcessEvent(urlEntry.Text)
+			result, processErr = ProcessJsonEvent(0)
+			//result, processErr = ProcessEvent(urlEntry.Text)
 
 			// Step 3: Queue UI updates on main thread (thread-safe)
-			fyne.DoAndWait(func() {
+			fyne.Do(func() {
 				// Hide the popup
 				if popup != nil {
 					popup.Hide()
@@ -64,6 +66,10 @@ func (cfg *Config) MakeUI() {
 				currentGrid = NewVehicleGrid(result.rm, cfg)
 				cfg.VehicleSection.Objects = []fyne.CanvasObject{currentGrid}
 				cfg.VehicleSection.Refresh()
+
+				if wrapper != nil {
+					wrapper.grid = currentGrid
+				}
 			})
 		}()
 	})
@@ -151,7 +157,7 @@ func (cfg *Config) MakeUI() {
 	)
 
 	// Create a wrapper that handles mouse events
-	wrapper := &mainContentWrapper{
+	wrapper = &mainContentWrapper{
 		content: tabs,
 		grid:    nil, // Will be updated when grid is created
 	}
