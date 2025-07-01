@@ -93,6 +93,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, depotAddr)
 
 	depotCoorString := depotCoor.ToString()
+	fmt.Println("SMSM Location: ", depotCoorString)
 	addToCoordListString(&depotCoorString)
 
 	// Geocode all guests and track unique coordinates

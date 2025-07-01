@@ -17,6 +17,7 @@ type Vehicle struct {
 	SeatsRemaining int
 	Route          Route
 	Guests         []Guest
+	Locations      []coordinates.GuestCoordinates
 }
 
 // RouteManager manages the state of all vehicles, routing decisions, and guest assignments.
@@ -91,6 +92,7 @@ func (rm *RouteManager) determineGuestsInvolved(e *Event, lr *LocationRegistry) 
 		}
 
 		addresses := determineAddressesVisited(nodeVisited, e)
+		v.determineCoordinates(addresses, lr)
 		v.findGuests(addresses, e, lr)
 	}
 
@@ -107,4 +109,13 @@ func (rm *RouteManager) createCoordinateList(lr *LocationRegistry) {
 	}
 	rm.CoordinateList = coorList
 
+}
+
+func (v *Vehicle) determineCoordinates(addresses []string, lr *LocationRegistry) {
+	vehicleCoordinates := make([]coordinates.GuestCoordinates, 0)
+	for _, a := range addresses {
+		gc := lr.CoordianteMap.CoordinateToAddress[a]
+		vehicleCoordinates = append(vehicleCoordinates, gc)
+	}
+	v.Locations = vehicleCoordinates
 }
