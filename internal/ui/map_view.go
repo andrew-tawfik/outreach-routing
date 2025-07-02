@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -69,7 +68,10 @@ func NewMapView(rp *RoutingProcess, cfg *Config) *MapView {
 	}
 
 	mv.CreateColorMapping()
-	mv.getApiKey()
+	err := mv.getApiKey()
+	if err != nil {
+		fmt.Println("could not get api key because: ", err)
+	}
 	mv.ExtendBaseWidget(mv)
 	return mv
 }
@@ -207,8 +209,8 @@ func (mv *MapView) createLegendRow(colorName, label, address string) *fyne.Conta
 }
 
 func NRGBAToHex(c color.Color) string {
-	r, g, b, _ := c.RGBA()
-	return fmt.Sprintf("0x%02X%02X%02X", r, g, b)
+	rgba := color.NRGBAModel.Convert(c).(color.NRGBA)
+	return fmt.Sprintf("0x%02X%02X%02X", rgba.R, rgba.G, rgba.B)
 }
 
 func (mv *MapView) CreateColorMapping() {
@@ -246,36 +248,34 @@ func (mv *MapView) buildMapURL() string {
 	params.Set("size", fmt.Sprintf("%dx%d", mapWidth, mapHeight))
 	params.Set("key", mv.apiKey)
 	params.Set("maptype", "roadmap")
+	params.Set("center", fmt.Sprintf("%f,%f", depotCoor.Lat, depotCoor.Long))
 
 	// Add depot marker with brown color
 	depotColor := mv.colorMap["brown"]
-	params.Add("markers", fmt.Sprintf("color:%s|label:✞|%f,%f ", NRGBAToHex(depotColor), depotCoor.Lat, depotCoor.Long))
+	params.Add("markers", fmt.Sprintf("color:%s|label:M|%f,%f", NRGBAToHex(depotColor), depotCoor.Lat, depotCoor.Long))
 
 	// Add markers for each vehicle's route
 	for i, vehicle := range mv.routingProcess.rm.Vehicles {
 		if len(vehicle.Guests) > 0 {
 			// Use vehicle color from the ordered list
-			vehicleColor := mv.colors[i%len(mv.colors)]
+			vehicleColorName := mv.colors[i%len(mv.colors)]
+			vehicleColor := mv.colorMap[vehicleColorName]
+			hexColor := NRGBAToHex(vehicleColor)
 
-			// Build markers string for this vehicle
-			var markersList []string
+			fmt.Printf("Vehicle %d: %s\n", i+1, vehicleColorName)
+
+			// Add separate marker parameter for each location
 			for j, loc := range vehicle.Locations {
 				label := fmt.Sprintf("%c", 'A'+j)
-				marker := fmt.Sprintf("label:%s|%f,%f", label, loc.Lat, loc.Long)
-				markersList = append(markersList, marker)
-			}
-
-			if len(markersList) > 0 {
-				markersParam := fmt.Sprintf("color:%s|%s", vehicleColor, strings.Join(markersList, "|"))
-				params.Add("markers", markersParam)
+				marker := fmt.Sprintf("color:%s|label:%s|%f,%f", hexColor, label, loc.Lat, loc.Long)
+				params.Add("markers", marker)
 			}
 		}
 	}
 
-	// Auto-adjust zoom to show all markers
-	params.Set("zoom", "11") // Default zoom, API will auto-adjust if needed
-
-	return staticMapsBaseURL + "?" + params.Encode()
+	completeURL := staticMapsBaseURL + "?" + params.Encode()
+	fmt.Println(completeURL)
+	return completeURL
 }
 
 // loadMap fetches and displays the map from Google Static Maps API
