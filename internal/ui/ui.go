@@ -24,6 +24,7 @@ func (cfg *Config) MakeUI() {
 	outputEntry.Wrapping = fyne.TextWrapWord
 
 	var currentGrid *VehicleGrid // Store reference to current grid
+	var tabs *container.AppTabs  // Store reference to tabs
 
 	runButton := widget.NewButton("Run", func() {
 		var popup *widget.PopUp
@@ -39,7 +40,7 @@ func (cfg *Config) MakeUI() {
 		// Step 2: Run background work
 		go func() {
 			// Do the heavy lifting
-			result, processErr = ProcessJsonEvent(1)
+			result, processErr = ProcessJsonEvent(0)
 			//result, processErr = ProcessEvent(urlEntry.Text)
 
 			// Step 3: Queue UI updates on main thread (thread-safe)
@@ -71,8 +72,18 @@ func (cfg *Config) MakeUI() {
 					wrapper.grid = currentGrid
 				}
 
-				googleMap := NewMapView(cfg.Rp, cfg)
-				googleMap.buildMapURL()
+				mapView := NewMapView(cfg.Rp, cfg)
+
+				if tabs != nil {
+					// Find the Map tab (it should be at index 2) and update its content
+					for i := 0; i < 3; i++ {
+						if tabs.Items[i].Text == "Map" {
+							tabs.Items[i].Content = mapView
+							break
+						}
+					}
+					tabs.Refresh()
+				}
 			})
 		}()
 	})
@@ -93,21 +104,22 @@ func (cfg *Config) MakeUI() {
 	// ---- Output & Actions ----------------------------------
 
 	outputScroll := container.NewScroll(outputEntry)
-	outputScroll.SetMinSize(fyne.NewSize(350, 300))
+	// Remove the fixed MinSize to allow it to expand
+	// outputScroll.SetMinSize(fyne.NewSize(350, 300))
 
-	outputSection := widget.NewCard("Results", "", container.NewBorder(nil, nil, nil, nil, outputScroll))
+	outputSection := widget.NewCard("Guest Dropoff Summary", "", outputScroll)
 
-	spacer1 := canvas.NewRectangle(color.Transparent)
-	spacer1.SetMinSize(fyne.NewSize(0, 100))
-
+	// Small spacer at the top only
 	spacer2 := canvas.NewRectangle(color.Transparent)
 	spacer2.SetMinSize(fyne.NewSize(0, 20))
 
-	homeTab := container.NewVBox(
-		spacer2,
-		urlCard, // Your input section
-		spacer1,
-		outputSection, // Results text
+	// Use NewBorder to make output section fill the remaining space
+	homeTab := container.NewBorder(
+		container.NewVBox(spacer2, urlCard), // top - input section
+		nil,                                 // bottom
+		nil,                                 // left
+		nil,                                 // right
+		outputSection,                       // center - this will expand to fill remaining space
 	)
 
 	gradient := canvas.NewLinearGradient(
@@ -153,10 +165,15 @@ func (cfg *Config) MakeUI() {
 
 	routePlanningTab := container.NewMax(gradient, routePlanningContent)
 
+	mapTabPlaceholder := container.NewCenter(
+		widget.NewLabel("Run the routing process to see the map visualization"),
+	)
+
 	// Create the tab container
-	tabs := container.NewAppTabs(
+	tabs = container.NewAppTabs(
 		container.NewTabItem("Home", homeTab),
 		container.NewTabItem("Route Planning", routePlanningTab),
+		container.NewTabItem("Map", mapTabPlaceholder),
 	)
 
 	// Create a wrapper that handles mouse events

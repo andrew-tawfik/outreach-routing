@@ -14,6 +14,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/andrew-tawfik/outreach-routing/internal/app"
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
@@ -100,8 +101,8 @@ func (mv *MapView) CreateRenderer() fyne.WidgetRenderer {
 	mv.mapImage.SetMinSize(fyne.NewSize(mapWidth, mapHeight))
 
 	// Create map container with border
-	mapBorder := canvas.NewRectangle(color.NRGBA{200, 200, 200, 255})
-	mapBorder.StrokeColor = color.NRGBA{150, 150, 150, 255}
+	mapBorder := canvas.NewRectangle(color.Transparent)
+	mapBorder.StrokeColor = color.Transparent
 	mapBorder.StrokeWidth = 2
 	mapBorder.CornerRadius = 8
 
@@ -109,23 +110,35 @@ func (mv *MapView) CreateRenderer() fyne.WidgetRenderer {
 		mapBorder,
 		container.NewPadded(mv.mapImage),
 	)
+	//mapContainer.Resize(fyne.NewSize(mapWidth+20, mapHeight+100))
 
-	// Create legend
-	mv.legend = mv.createLegend()
+	if mv.routingProcess != nil && mv.routingProcess.rm != nil {
+		mv.legend = mv.createLegend()
+	} else {
+		mv.legend = container.NewVBox(widget.NewLabel("No route data available"))
+	}
 
 	// Create main layout
-	content := container.NewBorder(
+	content := container.NewHSplit(
+		mapContainer, // left side - map
+		mv.legend,    // right side - legend
+	)
+	content.SetOffset(0.6)
+
+	mv.mainContainer = container.NewBorder(
 		nil,           // top
 		mv.errorLabel, // bottom
 		nil,           // left
-		mv.legend,     // right
-		mapContainer,  // center
+		nil,           // right
+		content,       // center
 	)
+	mv.mainContainer = container.NewPadded(mv.mainContainer)
 
-	mv.mainContainer = container.NewPadded(content)
-
-	// Load the map
-	go mv.loadMap()
+	if mv.routingProcess != nil && mv.routingProcess.rm != nil {
+		go mv.loadMap()
+	} else {
+		mv.showError("No routing data available. Please run the routing process first.")
+	}
 
 	return &mapViewRenderer{
 		mapView: mv,
@@ -144,7 +157,7 @@ func (mv *MapView) createLegend() *fyne.Container {
 	legendItems := container.NewVBox(legendTitle, widget.NewSeparator())
 
 	// Add depot marker
-	depotRow := mv.createLegendRow("black", "Depot", "555 Parkdale Ave")
+	depotRow := mv.createLegendRow("brown", "Depot", "555 Parkdale Ave")
 	legendItems.Add(depotRow)
 	legendItems.Add(widget.NewSeparator())
 
@@ -163,9 +176,12 @@ func (mv *MapView) createLegend() *fyne.Container {
 			legendItems.Add(vehicleLabel)
 
 			// Add each address for this vehicle
-			for j, guest := range vehicle.Guests {
-				markerLabel := fmt.Sprintf("%c", 'A'+j)
-				row := mv.createLegendRow(vehicleColor, markerLabel, guest.Address)
+			for elem := vehicle.Route.List.Front(); elem != nil; elem = elem.Next() {
+				addr := mv.routingProcess.lr.CoordianteMap.AddressOrder[elem.Value.(int)]
+				coor := mv.routingProcess.lr.CoordianteMap.CoordinateToAddress[addr]
+				markerLabel := mv.determineMarkerLabel(&vehicle, &coor)
+
+				row := mv.createLegendRow(vehicleColor, markerLabel, addr)
 				legendItems.Add(row)
 			}
 
@@ -178,6 +194,18 @@ func (mv *MapView) createLegend() *fyne.Container {
 	legendCard.Resize(fyne.NewSize(300, mapHeight))
 
 	return container.NewMax(legendCard)
+}
+
+func (mv *MapView) determineMarkerLabel(vehicle *app.Vehicle, coor *coordinates.GuestCoordinates) string {
+	colorIndex := -1
+	for i := range vehicle.Locations {
+		match := vehicle.Locations[i]
+		if match.Long == coor.Long && match.Lat == coor.Lat {
+			colorIndex = i
+		}
+	}
+	return fmt.Sprintf("%c", 'A'+colorIndex)
+
 }
 
 // createLegendRow creates a single row in the legend
@@ -262,8 +290,6 @@ func (mv *MapView) buildMapURL() string {
 			vehicleColor := mv.colorMap[vehicleColorName]
 			hexColor := NRGBAToHex(vehicleColor)
 
-			fmt.Printf("Vehicle %d: %s\n", i+1, vehicleColorName)
-
 			// Add separate marker parameter for each location
 			for j, loc := range vehicle.Locations {
 				label := fmt.Sprintf("%c", 'A'+j)
@@ -274,7 +300,6 @@ func (mv *MapView) buildMapURL() string {
 	}
 
 	completeURL := staticMapsBaseURL + "?" + params.Encode()
-	fmt.Println(completeURL)
 	return completeURL
 }
 
@@ -330,9 +355,11 @@ func (mv *MapView) showError(message string) {
 
 // Refresh updates the map view with new data
 func (mv *MapView) Refresh() {
-	mv.legend = mv.createLegend()
-	mv.mainContainer.Refresh()
-	go mv.loadMap()
+	if mv.mainContainer != nil {
+		mv.legend = mv.createLegend()
+		mv.mainContainer.Refresh()
+		go mv.loadMap()
+	}
 }
 
 // mapViewRenderer implements the renderer for MapView

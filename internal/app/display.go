@@ -9,9 +9,6 @@ import (
 func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) string {
 	var b strings.Builder
 
-	b.WriteString("Guest Dropoff Summary\n")
-	b.WriteString("============================\n\n")
-
 	for i := range rm.Vehicles {
 		v := &rm.Vehicles[i] // take pointer into slice
 		vehicleInfo := v.GetVehicleRouteInfo(i, e, lr)
@@ -22,25 +19,41 @@ func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) string {
 }
 
 func (v *Vehicle) GetVehicleRouteInfo(index int, e *Event, lr *LocationRegistry) string {
-	if v.Route.List == nil {
-		return fmt.Sprintf("Vehicle %d: No guestsss", index+1)
+	if v.Route.List == nil || len(v.Guests) == 0 {
+		return fmt.Sprintf("Driver %d: No guests assigned", index+1)
 	}
 
-	return fmt.Sprintf("Vehicle %d: %s", index+1, v.displayGuests())
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("Driver %d:\n", index+1))
+
+	// Format each guest with bullet points
+	for _, guest := range v.Guests {
+		result.WriteString(v.formatGuestEntry(guest))
+	}
+
+	return result.String()
 }
 
-func (v *Vehicle) displayGuests() string {
-	if len(v.Guests) == 0 {
-		return "No guests"
+func (v *Vehicle) formatGuestEntry(guest Guest) string {
+	var entry strings.Builder
+
+	// Guest name with group size if > 1
+	guestName := guest.Name
+	if guest.GroupSize > 1 {
+		guestName = fmt.Sprintf("%s (Group of %d)", guest.Name, guest.GroupSize)
 	}
-	var sb strings.Builder
-	for i, g := range v.Guests {
-		sb.WriteString(fmt.Sprintf("%s (%s)", g.Name, g.Address))
-		if i < len(v.Guests)-1 {
-			sb.WriteString(", ")
-		}
+
+	entry.WriteString(fmt.Sprintf("• %s\n", guestName))
+	entry.WriteString(fmt.Sprintf("    ‣ %s\n", guest.Address))
+
+	// Phone number - handle empty numbers
+	if guest.PhoneNumber != "" {
+		entry.WriteString(fmt.Sprintf("    ‣ %s\n", guest.PhoneNumber))
+	} else {
+		entry.WriteString("  No number\n")
 	}
-	return sb.String()
+
+	return entry.String()
 }
 
 // UpdateRouteFromGuests rebuilds the Route.List based on current guests
