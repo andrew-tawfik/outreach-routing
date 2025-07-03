@@ -60,7 +60,7 @@ func (km *Kmeans) init(rm *RouteManager) {
 		totalDestinationCount += 1
 	}
 
-	vehicleCount := ((totalDestinationCount + 2) / 3)
+	vehicleCount := ((totalDestinationCount + 2) / 3) + 2
 
 	for i := 0; i < vehicleCount; i++ {
 		newVehicle := Vehicle{Route: Route{List: list.New()}}
