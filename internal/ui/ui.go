@@ -25,6 +25,7 @@ func (cfg *Config) MakeUI() {
 
 	var currentGrid *VehicleGrid // Store reference to current grid
 	var tabs *container.AppTabs  // Store reference to tabs
+	var mapView *MapView
 
 	runButton := widget.NewButton("Run", func() {
 		var popup *widget.PopUp
@@ -72,16 +73,10 @@ func (cfg *Config) MakeUI() {
 					wrapper.grid = currentGrid
 				}
 
-				mapView := NewMapView(cfg.Rp, cfg)
+				mapView = NewMapView(cfg.Rp, cfg)
 
 				if tabs != nil {
-					// Find the Map tab (it should be at index 2) and update its content
-					for i := 0; i < 3; i++ {
-						if tabs.Items[i].Text == "Map" {
-							tabs.Items[i].Content = mapView
-							break
-						}
-					}
+					tabs.Items[2].Content = mapView
 					tabs.Refresh()
 				}
 			})
@@ -136,6 +131,13 @@ func (cfg *Config) MakeUI() {
 					outputEntry.SetText(cfg.Rp.String())
 					outputEntry.Refresh()
 					cfg.InfoLog.Println("Changes submitted")
+				}
+
+				mapView = NewMapView(cfg.Rp, cfg)
+
+				if tabs != nil {
+					tabs.Items[2].Content = mapView
+					tabs.Refresh()
 				}
 
 			}
