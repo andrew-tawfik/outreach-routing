@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"container/list"
+
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
 )
 
@@ -10,31 +12,49 @@ type VehicleManager struct {
 	grid         *VehicleGrid
 	config       *Config
 
-	// State tracking
-	initialState map[int][]app.Guest // Original state for reset functionality
-	hasChanges   bool
+	// State tracking - now includes routes
+	initialGuestState map[int][]app.Guest // Original guest assignments
+	initialRouteState map[int]app.Route   // Original route assignments
+	hasChanges        bool
 }
 
 // NewVehicleManager creates a new vehicle manager
 func NewVehicleManager(rm *app.RouteManager, grid *VehicleGrid, cfg *Config) *VehicleManager {
 	vm := &VehicleManager{
-		routeManager: rm,
-		grid:         grid,
-		initialState: make(map[int][]app.Guest),
-		config:       cfg,
+		routeManager:      rm,
+		grid:              grid,
+		initialGuestState: make(map[int][]app.Guest),
+		initialRouteState: make(map[int]app.Route),
+		config:            cfg,
 	}
 
 	vm.captureInitialState()
 	return vm
 }
 
-// captureInitialState saves the current vehicle assignments for reset functionality
+// captureInitialState saves the current vehicle assignments AND routes for reset functionality
 func (vm *VehicleManager) captureInitialState() {
 	for i, vehicle := range vm.routeManager.Vehicles {
 		// Deep copy the guests slice
 		guestsCopy := make([]app.Guest, len(vehicle.Guests))
 		copy(guestsCopy, vehicle.Guests)
-		vm.initialState[i] = guestsCopy
+		vm.initialGuestState[i] = guestsCopy
+
+		// Deep copy the route - need to copy the linked list
+		routeCopy := app.Route{
+			DestinationCount: vehicle.Route.DestinationCount,
+			List:             nil, // Will be set below
+		}
+
+		// Copy the linked list if it exists
+		if vehicle.Route.List != nil {
+			routeCopy.List = list.New()
+			for elem := vehicle.Route.List.Front(); elem != nil; elem = elem.Next() {
+				routeCopy.List.PushBack(elem.Value)
+			}
+		}
+
+		vm.initialRouteState[i] = routeCopy
 	}
 	vm.hasChanges = false
 }
@@ -72,13 +92,18 @@ func (vm *VehicleManager) MoveGuest(guest *app.Guest, fromVehicle, toVehicle int
 	targetVehicle.Guests = append(targetVehicle.Guests, *guest)
 	targetVehicle.SeatsRemaining -= guest.GroupSize
 
+	// Update routes for both vehicles
+	vm.updateVehicleRoute(fromVehicle)
+	vm.updateVehicleRoute(toVehicle)
+
 	vm.hasChanges = true
 	return nil
 }
 
-// ResetToInitialState restores all vehicles to their original state
+// ResetToInitialState restores all vehicles to their original state INCLUDING routes
 func (vm *VehicleManager) ResetToInitialState() {
-	for i, originalGuests := range vm.initialState {
+	// First restore guest assignments
+	for i, originalGuests := range vm.initialGuestState {
 		if i < len(vm.routeManager.Vehicles) {
 			vehicle := &vm.routeManager.Vehicles[i]
 
@@ -94,15 +119,61 @@ func (vm *VehicleManager) ResetToInitialState() {
 		}
 	}
 
+	// Then restore route assignments
+	for i, originalRoute := range vm.initialRouteState {
+		if i < len(vm.routeManager.Vehicles) {
+			vehicle := &vm.routeManager.Vehicles[i]
+
+			// Restore route destination count
+			vehicle.Route.DestinationCount = originalRoute.DestinationCount
+
+			// Restore the linked list
+			if originalRoute.List == nil {
+				vehicle.Route.List = nil
+			} else {
+				vehicle.Route.List = list.New()
+				for elem := originalRoute.List.Front(); elem != nil; elem = elem.Next() {
+					vehicle.Route.List.PushBack(elem.Value)
+				}
+			}
+		}
+	}
+
 	vm.hasChanges = false
 
 	// Refresh the grid display
 	vm.grid.refreshAfterMove()
+
+	vm.config.InfoLog.Println("Reset to initial state completed - both guests and routes restored")
+}
+
+// updateVehicleRoute updates the route for a specific vehicle based on its current guests
+func (vm *VehicleManager) updateVehicleRoute(vehicleIndex int) {
+	if vehicleIndex < 0 || vehicleIndex >= len(vm.routeManager.Vehicles) {
+		return
+	}
+
+	vehicle := &vm.routeManager.Vehicles[vehicleIndex]
+	lr := vm.config.Rp.lr
+
+	// Use the existing UpdateRouteFromGuests method
+	vehicle.UpdateRouteFromGuests(lr)
+}
+
+// updateAllVehicleRoutes updates routes for all vehicles
+func (vm *VehicleManager) updateAllVehicleRoutes() {
+	lr := vm.config.Rp.lr
+	for i := range vm.routeManager.Vehicles {
+		vm.routeManager.Vehicles[i].UpdateRouteFromGuests(lr)
+	}
 }
 
 // SubmitChanges applies the current state as the new baseline
 func (vm *VehicleManager) SubmitChanges() {
 	if vm.hasChanges {
+		// Make sure all routes are up to date before capturing state
+		vm.updateAllVehicleRoutes()
+
 		vm.captureInitialState() // Make current state the new baseline
 		vm.grid.config.InfoLog.Println("Changes submitted successfully")
 	}

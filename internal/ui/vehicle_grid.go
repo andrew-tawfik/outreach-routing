@@ -298,6 +298,7 @@ func (vg *VehicleGrid) isValidDropTarget(target VehiclePosition) bool {
 
 func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 	rm := vg.config.Rp.rm
+	lr := vg.config.Rp.lr
 
 	// Special handling for same-vehicle moves
 	if from.VehicleIndex == to.VehicleIndex {
@@ -336,6 +337,9 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 			append([]app.Guest{guest}, vehicle.Guests[insertPos:]...)...,
 		)
 
+		// Update the route for this vehicle
+		vehicle.UpdateRouteFromGuests(lr)
+
 		// Refresh just this vehicle
 		vg.refreshAfterMove()
 		return
@@ -345,12 +349,17 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 	sourceVehicle := &rm.Vehicles[from.VehicleIndex]
 	guestIndex := vg.findGuestIndex(sourceVehicle, vg.draggedGuest)
 	guest := sourceVehicle.Guests[guestIndex]
+	
 	if guestIndex >= 0 {
+		// Remove from source vehicle
 		sourceVehicle.Guests = append(
 			sourceVehicle.Guests[:guestIndex],
 			sourceVehicle.Guests[guestIndex+1:]...,
 		)
 		sourceVehicle.SeatsRemaining += vg.draggedGuest.GroupSize
+		
+		// Update source vehicle route
+		sourceVehicle.UpdateRouteFromGuests(lr)
 	}
 
 	// Add guest to target vehicle at the specific tile position
@@ -368,7 +377,11 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 
 	targetVehicle.SeatsRemaining -= guest.GroupSize
 
-	vg.updateVehicleRoutes()
+	// Update target vehicle route
+	targetVehicle.UpdateRouteFromGuests(lr)
+
+	// Mark that we have changes
+	vg.vehicleManager.hasChanges = true
 
 	// Refresh both vehicles
 	vg.refreshAfterMove()
@@ -406,12 +419,18 @@ func (vg *VehicleGrid) refreshAfterMove() {
 
 // ResetVehicles resets all vehicles to their initial state
 func (vg *VehicleGrid) ResetVehicles() {
-	vg.vehicleManager.ResetToInitialState()
+	if vg.vehicleManager != nil {
+		vg.vehicleManager.ResetToInitialState()
+		vg.config.InfoLog.Println("Vehicles reset to initial state")
+	}
 }
 
-// SubmitChanges applies current changes as the new baseline
+// Updated SubmitChanges method
 func (vg *VehicleGrid) SubmitChanges() {
-	vg.vehicleManager.SubmitChanges()
+	if vg.vehicleManager != nil {
+		vg.vehicleManager.SubmitChanges()
+		vg.config.InfoLog.Println("Changes submitted successfully")
+	}
 }
 
 // Implement Mouseable interface to capture mouse events
