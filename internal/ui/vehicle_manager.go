@@ -4,6 +4,7 @@ import (
 	"container/list"
 
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
+	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
 // VehicleManager handles vehicle state management and operations
@@ -13,19 +14,21 @@ type VehicleManager struct {
 	config       *Config
 
 	// State tracking - now includes routes
-	initialGuestState map[int][]app.Guest // Original guest assignments
-	initialRouteState map[int]app.Route   // Original route assignments
-	hasChanges        bool
+	initialGuestState    map[int][]app.Guest // Original guest assignments
+	initialRouteState    map[int]app.Route   // Original route assignments
+	initialLocationState map[int][]coordinates.GuestCoordinates
+	hasChanges           bool
 }
 
 // NewVehicleManager creates a new vehicle manager
 func NewVehicleManager(rm *app.RouteManager, grid *VehicleGrid, cfg *Config) *VehicleManager {
 	vm := &VehicleManager{
-		routeManager:      rm,
-		grid:              grid,
-		initialGuestState: make(map[int][]app.Guest),
-		initialRouteState: make(map[int]app.Route),
-		config:            cfg,
+		routeManager:         rm,
+		grid:                 grid,
+		initialGuestState:    make(map[int][]app.Guest),
+		initialRouteState:    make(map[int]app.Route),
+		initialLocationState: make(map[int][]coordinates.GuestCoordinates),
+		config:               cfg,
 	}
 
 	vm.captureInitialState()
@@ -39,6 +42,10 @@ func (vm *VehicleManager) captureInitialState() {
 		guestsCopy := make([]app.Guest, len(vehicle.Guests))
 		copy(guestsCopy, vehicle.Guests)
 		vm.initialGuestState[i] = guestsCopy
+
+		locationsCopy := make([]coordinates.GuestCoordinates, len(vehicle.Locations))
+		copy(locationsCopy, vehicle.Locations)
+		vm.initialLocationState[i] = locationsCopy
 
 		// Deep copy the route - need to copy the linked list
 		routeCopy := app.Route{
@@ -134,8 +141,19 @@ func (vm *VehicleManager) ResetToInitialState() {
 				vehicle.Route.List = list.New()
 				for elem := originalRoute.List.Front(); elem != nil; elem = elem.Next() {
 					vehicle.Route.List.PushBack(elem.Value)
+
 				}
 			}
+		}
+	}
+
+	for i, originalLocations := range vm.initialLocationState {
+		if i < len(vm.routeManager.Vehicles) {
+			vehicle := &vm.routeManager.Vehicles[i]
+
+			// Restore locations list
+			vehicle.Locations = make([]coordinates.GuestCoordinates, len(originalLocations))
+			copy(vehicle.Locations, originalLocations)
 		}
 	}
 
