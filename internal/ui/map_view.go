@@ -175,9 +175,14 @@ func (mv *MapView) createLegend() *fyne.Container {
 
 			legendItems.Add(vehicleLabel)
 
+			groceryAdj := 0
+			if mv.routingProcess.ae.EventType == "Grocery" {
+				groceryAdj = 1
+			}
 			// Add each address for this vehicle
 			for elem := vehicle.Route.List.Front(); elem != nil; elem = elem.Next() {
-				addr := mv.routingProcess.lr.CoordianteMap.AddressOrder[elem.Value.(int)]
+				addressIndex := elem.Value.(int) + groceryAdj
+				addr := mv.routingProcess.lr.CoordianteMap.AddressOrder[addressIndex]
 				coor := mv.routingProcess.lr.CoordianteMap.CoordinateToAddress[addr]
 				markerLabel := mv.determineMarkerLabel(&vehicle, &coor)
 
@@ -204,6 +209,15 @@ func (mv *MapView) determineMarkerLabel(vehicle *app.Vehicle, coor *coordinates.
 			colorIndex = i
 		}
 	}
+	if colorIndex == -1 {
+		fmt.Println("This vehicle has no match with (%f, %f): ", coor.Long, coor.Lat)
+		for _, c := range vehicle.Locations {
+
+			fmt.Println("  (%f, %f) ", c.Long, c.Lat)
+
+		}
+	}
+	//fmt.Printf("The color index of vehicle is: %d\n", colorIndex)
 	return fmt.Sprintf("%c", 'A'+colorIndex)
 
 }

@@ -38,6 +38,7 @@ type VehicleGrid struct {
 	gridContainer   *fyne.Container // The actual grid of vehicle cards
 	mainContainer   *fyne.Container // Max container with overlay
 	scrollContainer *container.Scroll
+	eventType       string
 }
 
 // VehiclePosition identifies a specific location in the grid
@@ -52,6 +53,7 @@ func NewVehicleGrid(rm *app.RouteManager, cfg *Config) *VehicleGrid {
 		routeManager: rm,
 		config:       cfg,
 		vehicles:     make([]*VehicleCard, 0),
+		eventType:    cfg.Rp.ae.EventType,
 	}
 
 	// Create drag overlay that will show the dragged guest
@@ -338,7 +340,7 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 		)
 
 		// Update the route for this vehicle
-		vehicle.UpdateRouteFromGuests(lr)
+		vehicle.UpdateRouteFromGuests(lr, vg.eventType)
 
 		// Refresh just this vehicle
 		vg.refreshAfterMove()
@@ -349,7 +351,7 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 	sourceVehicle := &rm.Vehicles[from.VehicleIndex]
 	guestIndex := vg.findGuestIndex(sourceVehicle, vg.draggedGuest)
 	guest := sourceVehicle.Guests[guestIndex]
-	
+
 	if guestIndex >= 0 {
 		// Remove from source vehicle
 		sourceVehicle.Guests = append(
@@ -357,9 +359,9 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 			sourceVehicle.Guests[guestIndex+1:]...,
 		)
 		sourceVehicle.SeatsRemaining += vg.draggedGuest.GroupSize
-		
+
 		// Update source vehicle route
-		sourceVehicle.UpdateRouteFromGuests(lr)
+		sourceVehicle.UpdateRouteFromGuests(lr, vg.eventType)
 	}
 
 	// Add guest to target vehicle at the specific tile position
@@ -378,7 +380,7 @@ func (vg *VehicleGrid) performMove(from, to VehiclePosition) {
 	targetVehicle.SeatsRemaining -= guest.GroupSize
 
 	// Update target vehicle route
-	targetVehicle.UpdateRouteFromGuests(lr)
+	targetVehicle.UpdateRouteFromGuests(lr, vg.eventType)
 
 	// Mark that we have changes
 	vg.vehicleManager.hasChanges = true
@@ -525,6 +527,6 @@ func (vg *VehicleGrid) updateVehicleRoutes() {
 	lr := vg.config.Rp.lr
 
 	for i := range rm.Vehicles {
-		rm.Vehicles[i].UpdateRouteFromGuests(lr)
+		rm.Vehicles[i].UpdateRouteFromGuests(lr, vg.eventType)
 	}
 }

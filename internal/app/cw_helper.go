@@ -144,7 +144,7 @@ func determineAddressesVisited(nodeVisited []int, e *Event) []string {
 }
 
 // createVehicles returns a slice of Vehicles, each initialized with max seats and an empty route.
-func (rm *RouteManager) addNewVehicle() {
+func (rm *RouteManager) AddNewVehicle() {
 	newVehicle := Vehicle{SeatsRemaining: maxVehicleSeats}
 	rm.Vehicles = append(rm.Vehicles, newVehicle)
 }

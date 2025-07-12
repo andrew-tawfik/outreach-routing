@@ -156,15 +156,18 @@ func (vm *VehicleManager) updateVehicleRoute(vehicleIndex int) {
 	vehicle := &vm.routeManager.Vehicles[vehicleIndex]
 	lr := vm.config.Rp.lr
 
+	eventType := vm.config.Rp.ae.EventType
 	// Use the existing UpdateRouteFromGuests method
-	vehicle.UpdateRouteFromGuests(lr)
+	vehicle.UpdateRouteFromGuests(lr, eventType)
 }
 
 // updateAllVehicleRoutes updates routes for all vehicles
 func (vm *VehicleManager) updateAllVehicleRoutes() {
 	lr := vm.config.Rp.lr
+	eventType := vm.config.Rp.ae.EventType
+
 	for i := range vm.routeManager.Vehicles {
-		vm.routeManager.Vehicles[i].UpdateRouteFromGuests(lr)
+		vm.routeManager.Vehicles[i].UpdateRouteFromGuests(lr, eventType)
 	}
 }
 

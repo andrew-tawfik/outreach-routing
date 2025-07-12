@@ -93,7 +93,7 @@ func (cw *ClarkeWright) StartRouteDispatch(rm *RouteManager, lr *LocationRegistr
 // initializeSoloRoute assigns a single location to a new vehicle route
 func (rm *RouteManager) initializeSoloRoute(location1 int) {
 	// append new vehicle to slice
-	rm.addNewVehicle()
+	rm.AddNewVehicle()
 	vehicleToStart, err := rm.determineVehicle(2, location1, -1)
 	if err != nil {
 		return
@@ -128,7 +128,7 @@ func (rm *RouteManager) canAttachToRoute(vehicleIndex, location1, location2 int)
 
 // initiateNewRoute creates a new vehicle route between two unassigned locations
 func (rm *RouteManager) initiateNewRoute(location1, location2 int) {
-	rm.addNewVehicle()
+	rm.AddNewVehicle()
 	vehicleToStart, err := rm.determineVehicle(0, location1, location2)
 	if err != nil || vehicleToStart == -1 {
 		return

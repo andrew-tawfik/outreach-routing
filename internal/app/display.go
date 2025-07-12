@@ -4,6 +4,8 @@ import (
 	"container/list"
 	"fmt"
 	"strings"
+
+	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
 func (rm *RouteManager) Display(e *Event, lr *LocationRegistry) string {
@@ -57,7 +59,7 @@ func (v *Vehicle) formatGuestEntry(guest Guest) string {
 }
 
 // UpdateRouteFromGuests rebuilds the Route.List based on current guests
-func (v *Vehicle) UpdateRouteFromGuests(lr *LocationRegistry) {
+func (v *Vehicle) UpdateRouteFromGuests(lr *LocationRegistry, eventType string) {
 	if len(v.Guests) == 0 {
 		v.Route.List = nil
 		v.Route.DestinationCount = 0
@@ -67,13 +69,23 @@ func (v *Vehicle) UpdateRouteFromGuests(lr *LocationRegistry) {
 	// Create new linked list
 	v.Route.List = list.New()
 	v.Route.DestinationCount = 0
+	v.Locations = make([]coordinates.GuestCoordinates, 0)
+
+	grocAdj := 0
+	if eventType == "Grocery" {
+		grocAdj = 1
+	}
 
 	// Find the index for each guest's address in the addressOrder
 	for _, guest := range v.Guests {
 		for idx, addr := range lr.CoordianteMap.AddressOrder {
 			if addr == guest.Address {
-				v.Route.List.PushBack(idx)
+				newIdx := idx - grocAdj
+				v.Route.List.PushBack(newIdx)
 				v.Route.DestinationCount++
+
+				gc := lr.CoordianteMap.CoordinateToAddress[addr]
+				v.Locations = append(v.Locations, gc)
 				break
 			}
 		}
