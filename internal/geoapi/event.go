@@ -71,18 +71,7 @@ func (e *Event) FilterGuestForService() {
 
 // RequestGuestCoordiantes performs geocoding on all filtered guests
 func (e *Event) RequestGuestCoordiantes() error {
-	// Initialize coordinate mapping if empty
-	if e.GuestLocations.CoordianteMap.DestinationOccupancy == nil &&
-		e.GuestLocations.CoordianteMap.CoordinateToAddress == nil {
-
-		e.GuestLocations.CoordianteMap.DestinationOccupancy = make(map[coordinates.GuestCoordinates]int)
-		e.GuestLocations.CoordianteMap.CoordinateToAddress = make(map[string]coordinates.GuestCoordinates)
-		e.GuestLocations.CoordianteMap.AddressOrder = make([]string, 0)
-	}
-
-	apiErrors := ApiErrors{
-		FailedGuests: make([]FailedGuest, 0),
-	}
+	e.initCoordinateMap()
 
 	// Always include the depot location as index 0
 	depotAddr := "555 Parkdale Ave"
@@ -95,6 +84,26 @@ func (e *Event) RequestGuestCoordiantes() error {
 	depotCoorString := depotCoor.ToString()
 	fmt.Println("SMSM Location: ", depotCoorString)
 	addToCoordListString(&depotCoorString)
+
+	e.geocodeEvent()
+	return nil
+}
+
+func (e *Event) initCoordinateMap() {
+	// Initialize coordinate mapping if empty
+	if e.GuestLocations.CoordianteMap.DestinationOccupancy == nil &&
+		e.GuestLocations.CoordianteMap.CoordinateToAddress == nil {
+
+		e.GuestLocations.CoordianteMap.DestinationOccupancy = make(map[coordinates.GuestCoordinates]int)
+		e.GuestLocations.CoordianteMap.CoordinateToAddress = make(map[string]coordinates.GuestCoordinates)
+		e.GuestLocations.CoordianteMap.AddressOrder = make([]string, 0)
+	}
+}
+
+func (e *Event) geocodeEvent() {
+	apiErrors := ApiErrors{
+		FailedGuests: make([]FailedGuest, 0),
+	}
 
 	// Geocode all guests and track unique coordinates
 	for i := range e.Guests {
@@ -115,7 +124,7 @@ func (e *Event) RequestGuestCoordiantes() error {
 	}
 
 	e.ApiErrors = apiErrors
-	return nil
+
 }
 
 // addToCoordListString appends a new semicolon-prefixed coordinate string
