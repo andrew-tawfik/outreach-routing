@@ -3,6 +3,7 @@ package ui
 import (
 	"image/color"
 	"math"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -41,14 +42,15 @@ func (cfg *Config) MakeUI() {
 		// Step 2: Run background work
 		go func() {
 			// Do the heavy lifting
-			result, processErr = ProcessJsonEvent(1)
-			//result, processErr = ProcessEvent(urlEntry.Text)
+			//result, processErr = ProcessJsonEvent(1)
+			result, processErr = ProcessEvent(urlEntry.Text)
 
 			// Step 3: Queue UI updates on main thread (thread-safe)
 			fyne.Do(func() {
 				// Hide the popup
 				if popup != nil {
 					popup.Hide()
+					time.Sleep(1000)
 				}
 
 				// Show result or error
