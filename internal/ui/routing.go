@@ -35,14 +35,11 @@ func ProcessEvent(googleSheetURL string) (*RoutingProcess, error) {
 	// Parse event and guest data from the sheet
 	event, err := db.ProcessEvent()
 	if err != nil {
-		return nil, fmt.Errorf("Could not process event: %v", err)
+		return nil, fmt.Errorf("could not process event: %v", err)
 	}
 
 	// Map database event to geo event structure for coordinate lookup
 	geoEvent := converter.MapDatabaseEventToHttp(event)
-
-	// Filter guests who require transportation service (ie Confirmed or GroceryOnly)
-	geoEvent.FilterGuestForService()
 
 	// Request GPS coordinates for all guest addresses
 	err = geoEvent.RequestGuestCoordiantes()
@@ -87,15 +84,14 @@ func ProcessJsonEvent(eventType int) (*RoutingProcess, error) {
 	if eventType == 0 {
 		appEvent, lr, err = app.LoadAppDataFromFile("data_dinner.json")
 		if err != nil {
-			return nil, fmt.Errorf("Could not load json event information. %w", err)
+			return nil, fmt.Errorf("could not load json event information. %w", err)
 		}
 	} else {
 		appEvent, lr, err = app.LoadAppDataFromFile("data_grocery.json")
 		if err != nil {
-			return nil, fmt.Errorf("Could not load json event information. %w", err)
+			return nil, fmt.Errorf("could not load json event information. %w", err)
 		}
 	}
-	
 
 	RouteManager := app.OrchestateDispatch(&lr, &appEvent)
 

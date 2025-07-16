@@ -55,7 +55,7 @@ var coordListURL string
 
 // FilterGuestForService removes guests who are not eligible for routing.
 // Only guests marked Confirmed or GroceryOnly are kept.
-func (e *Event) FilterGuestForService() {
+func (e *Event) filterGuestForService() {
 	filteredGuests := make([]Guest, 0)
 
 	for _, g := range e.Guests {
@@ -71,6 +71,7 @@ func (e *Event) FilterGuestForService() {
 
 // RequestGuestCoordiantes performs geocoding on all filtered guests
 func (e *Event) RequestGuestCoordiantes() error {
+	e.filterGuestForService()
 	e.initCoordinateMap()
 
 	// Always include the depot location as index 0
