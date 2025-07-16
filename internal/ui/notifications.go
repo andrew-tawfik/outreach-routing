@@ -62,7 +62,7 @@ func ShowMessage(window fyne.Window) *widget.PopUp {
 
 	// Position top-right
 	windowSize := window.Canvas().Size()
-	popup.Move(fyne.NewPos(windowSize.Width-240, 20))
+	popup.Move(fyne.NewPos(windowSize.Width-240, 50))
 
 	return popup
 }
@@ -86,12 +86,15 @@ func ShowSuccess(window fyne.Window) {
 
 	// Position top-right
 	windowSize := window.Canvas().Size()
-	popup.Move(fyne.NewPos(windowSize.Width-220, 20))
+	popup.Move(fyne.NewPos(windowSize.Width-220, 50))
 	popup.Show()
 
 	// Auto-hide after 3 seconds
-	fyne.Do(func() {
+	go func() {
 		time.Sleep(3 * time.Second)
-		popup.Hide()
-	})
+		// Use fyne.Do only for the UI update
+		fyne.Do(func() {
+			popup.Hide()
+		})
+	}()
 }
