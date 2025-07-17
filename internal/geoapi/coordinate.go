@@ -33,11 +33,19 @@ func retreiveAddressCoordinate(address string) (coordinates.GuestCoordinates, er
 
 // geocodeGuestAddress assigns GPS coordinates to the guest's address
 func (g *Guest) geocodeGuestAddress() error {
-	gc, err := retreiveAddressCoordinate(g.Address)
+
+	apiKey, err := getApiKey()
 	if err != nil {
 		return err
 	}
+	gc, newAddr, err := retreiveGuestLocation(g.Address, apiKey)
+	// TODO  add the formatted address as this will be a more complete address string
+	if err != nil {
+		fmt.Println("there was an error: ", err)
+		return err
+	}
 	g.Coordinates = gc
+	g.Address = newAddr
 	return nil
 }
 

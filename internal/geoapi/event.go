@@ -101,33 +101,6 @@ func (e *Event) initCoordinateMap() {
 	}
 }
 
-func (e *Event) geocodeEvent() {
-	apiErrors := ApiErrors{
-		FailedGuests: make([]FailedGuest, 0),
-	}
-
-	// Geocode all guests and track unique coordinates
-	for i := range e.Guests {
-		err := e.Guests[i].geocodeGuestAddress()
-		if err != nil {
-
-			apiErrors.FailedGuests = append(apiErrors.FailedGuests, FailedGuest{
-				Name:    e.Guests[i].Name,
-				Address: e.Guests[i].Address,
-				Reason:  err.Error(),
-			})
-			continue
-		}
-		coor, unique := e.isUnique(i)
-		if unique {
-			addToCoordListString(&coor)
-		}
-	}
-
-	e.ApiErrors = apiErrors
-
-}
-
 // addToCoordListString appends a new semicolon-prefixed coordinate string
 // to the global OSRM coordinate list.
 func addToCoordListString(uniqueCoordinate *string) {
