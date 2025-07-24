@@ -45,6 +45,8 @@ type MapView struct {
 	errorLabel    *widget.Label
 	mainContainer *fyne.Container
 	apiKey        string
+
+	autoRefresh bool
 }
 
 type MapsConfig struct {
@@ -66,6 +68,7 @@ func NewMapView(rp *RoutingProcess, cfg *Config) *MapView {
 		routingProcess: rp,
 		config:         cfg,
 		errorLabel:     widget.NewLabel(""),
+		autoRefresh:    false,
 	}
 
 	mv.CreateColorMapping()
@@ -207,6 +210,7 @@ func (mv *MapView) determineMarkerLabel(vehicle *app.Vehicle, coor *coordinates.
 		match := vehicle.Locations[i]
 		if match.Long == coor.Long && match.Lat == coor.Lat {
 			colorIndex = i
+			break
 		}
 	}
 	if colorIndex == -1 {
@@ -369,7 +373,7 @@ func (mv *MapView) showError(message string) {
 
 // Refresh updates the map view with new data
 func (mv *MapView) Refresh() {
-	if mv.mainContainer != nil {
+	if mv.mainContainer != nil && mv.autoRefresh {
 		mv.legend = mv.createLegend()
 		mv.mainContainer.Refresh()
 		go mv.loadMap()
@@ -399,3 +403,12 @@ func (r *mapViewRenderer) Objects() []fyne.CanvasObject {
 }
 
 func (r *mapViewRenderer) Destroy() {}
+
+// Add a method to force refresh (called from Submit/Reset buttons)
+func (mv *MapView) ForceRefresh() {
+	if mv.mainContainer != nil {
+		mv.legend = mv.createLegend()
+		mv.mainContainer.Refresh()
+		go mv.loadMap()
+	}
+}

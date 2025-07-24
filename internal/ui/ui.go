@@ -130,7 +130,6 @@ func (cfg *Config) MakeUI() {
 	buttonBar := CreateButtonBar(
 		func() {
 			if currentGrid != nil {
-				//currentGrid.SubmitChanges()
 				if cfg.Rp != nil {
 					outputEntry.SetText(cfg.Rp.String())
 					outputEntry.Refresh()
@@ -147,9 +146,22 @@ func (cfg *Config) MakeUI() {
 			}
 		},
 		func() {
+
 			if currentGrid != nil {
 				currentGrid.ResetVehicles()
 				cfg.InfoLog.Println("Reset to initial state")
+
+				if cfg.Rp != nil {
+					outputEntry.SetText(cfg.Rp.String())
+					outputEntry.Refresh()
+					cfg.InfoLog.Println("Changes submitted")
+				}
+
+				mapView = NewMapView(cfg.Rp, cfg)
+				if tabs != nil {
+					tabs.Items[2].Content = mapView
+					tabs.Refresh()
+				}
 			}
 		},
 	)

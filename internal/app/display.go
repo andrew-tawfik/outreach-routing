@@ -63,6 +63,7 @@ func (v *Vehicle) UpdateRouteFromGuests(lr *LocationRegistry, eventType string) 
 	if len(v.Guests) == 0 {
 		v.Route.List = nil
 		v.Route.DestinationCount = 0
+		v.Locations = make([]coordinates.GuestCoordinates, 0)
 		return
 	}
 
@@ -76,8 +77,16 @@ func (v *Vehicle) UpdateRouteFromGuests(lr *LocationRegistry, eventType string) 
 		grocAdj = 1
 	}
 
+	// Track unique addresses to avoid duplicates
+	seenAddresses := make(map[string]bool)
+
 	// Find the index for each guest's address in the addressOrder
 	for _, guest := range v.Guests {
+		// Skip if we've already processed this address
+		if seenAddresses[guest.Address] {
+			continue
+		}
+
 		for idx, addr := range lr.CoordianteMap.AddressOrder {
 			if addr == guest.Address {
 				newIdx := idx - grocAdj
@@ -86,6 +95,9 @@ func (v *Vehicle) UpdateRouteFromGuests(lr *LocationRegistry, eventType string) 
 
 				gc := lr.CoordianteMap.CoordinateToAddress[addr]
 				v.Locations = append(v.Locations, gc)
+
+				// Mark this address as seen
+				seenAddresses[guest.Address] = true
 				break
 			}
 		}

@@ -1,7 +1,7 @@
-1. Reset button
-2. Google Maps Route api for distance matrix instead of OSRM
-3.
+1.
+4. Google Maps Route api for distance matrix instead of OSRM
+5. Package up the application
 
 
 
-plan for refactor 
+plan for refactor
