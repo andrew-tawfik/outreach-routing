@@ -1,31 +1,35 @@
 # Outreach Routing Planner
 
 ## Project Description
-This project is a Go-based command-line tool built to support Anba Abraam Service in planning efficient transportation routes for delivering groceries and transporting guests from dinner events to their homes. Designed specifically for the Service's coordinators, it streamlines the entire route dispatching process.
+This project is a Go-based Go-based desktop application designed to support Anba Abraam Service in planning efficient transportation routes for delivering groceries and transporting guests from dinner events to their homes. Built with Fyne UI framework, the application provides an intuitive drag-and-drop interface for coordinators to manage route dispatching with real-time visualization and interactive guest management.
 
-The tool integrates with Google Sheets for guest and event data, and leverages external services like Nominatim for geocoding and OSRM for calculating travel distances. 
+The application integrates with Google Sheets for guest and event data, leverages external services like Google Maps API for geocoding and OSRM for calculating travel distances, and provides interactive map visualization for route planning.
 
-At its core, the tool solves the Vehicle Routing Problem (VRP). This is a classic optimization problem in Computer Science that involves determining the most efficient set of routes for a fleet of vehicles to serve a group of destinations. In this case, destinations are guest dropoff points, and the fleet consists of vehicles with limited seating capacity. The system uses the Clarke-Wright Savings Algorithm to group guests intelligently and minimize total travel distance while ensuring each vehicle's capacity is respected.
+
+At its core, the tool solves the Vehicle Routing Problem (VRP) using different optimization algorithms based on event type: Clarke-Wright Savings Algorithm for dinner events focused on optimal distance-based routing, and K-means++ clustering for grocery runs optimized for efficient geographic distribution. The GUI allows coordinators to review and manually adjust the automatically generated routes through an intuitive drag-and-drop interface.
 
 ---
 
 ## Key Features
 
-- Reads structured guest and event data from a Google Sheet
-- Filters guests based on service eligibility
-- Retreive exact coordinates using guest addresses using Nominatim API
-- Builds a distance matrix of all coordinates involved using OSRM (Open Source Routing Machine)
-- Determines optimised vehicle routes using Clarke-Wright Savings Algorithm
+- Interactive GUI Interface: Fyne-based application with drag-and-drop guest management between vehicles
+- Real-time Map Visualization: Interactive Google Maps display showing vehicle routes and destinations
+- State Management: Save, reset, and submit route changes with full undo capability
 - Routes are displayed as vehicles and their assigned Guests
+- Multi-tab Workflow: Organized interface with Home, Route Planning, and Map visualization tabs
+- Reads and filters structured guest data from a Google Sheet
 ---
 
 ## Project Structure
 ```
-/cmd/             → CLI entrypoint and orchestration
+/cmd/             → GUI application entry point using Fyne framework
 /internal/
-  └── database/   → Fetches and parses Google Sheets data
-  └── geoapi/     → Handles geocoding (Nominatim) and routing (OSRM) APIs
-  └── app/        → Core domain logic: routing, distance handling, optimization
+  ├── app/        → Core domain logic: routing algorithms, optimization, data models
+  ├── converter/  → Data transformation between application layers
+  ├── coordinates/→ Geographic coordinate handling and utilities
+  ├── database/   → Google Sheets integration and data parsing
+  ├── geoapi/     → Geocoding (Google Maps) and routing (OSRM) API integration
+  └── ui/         → Fyne-based GUI components and user interaction 
 ```
 
 
