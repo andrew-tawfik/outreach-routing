@@ -57,7 +57,9 @@ func (cfg *Config) MakeUI() {
 
 				// Show result or error
 				if processErr != nil {
+					fmt.Println("The program knows there is an error")
 					fyne.Do(func() {
+						fmt.Println("in the fyne do")
 						ShowErrorNotification(cfg.MainWindow, "Processing Error", processErr.Error())
 					})
 					return

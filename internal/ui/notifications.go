@@ -13,8 +13,7 @@ import (
 // ShowInAppNotification shows a notification within the app window
 func ShowErrorNotification(window fyne.Window, title, message string) {
 	// Create notification card
-	var bgColor color.Color
-	bgColor = color.NRGBA{R: 200, G: 50, B: 50, A: 230} // Red
+	bgColor := color.NRGBA{R: 200, G: 50, B: 50, A: 230} // Red
 
 	background := canvas.NewRectangle(bgColor)
 	background.CornerRadius = 4
@@ -37,10 +36,13 @@ func ShowErrorNotification(window fyne.Window, title, message string) {
 	popup.Show()
 
 	// Auto-hide after 3 seconds
-	fyne.Do(func() {
-		time.Sleep(5 * time.Second)
-		popup.Hide()
-	})
+	go func() {
+		time.Sleep(10 * time.Second)
+		// Use fyne.Do only for the UI update
+		fyne.Do(func() {
+			popup.Hide()
+		})
+	}()
 }
 
 func ShowMessage(window fyne.Window) *widget.PopUp {
