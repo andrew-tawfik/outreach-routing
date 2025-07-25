@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/andrew-tawfik/outreach-routing/internal/config"
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
@@ -68,17 +69,23 @@ func retreiveGuestLocation(gAddress, apiKey string) (coordinates.GuestCoordinate
 }
 
 func getApiKey() (string, error) {
+
+	apiKey, err := config.GetEmbeddedMapsAPIKey()
+	if err == nil && apiKey != "" {
+		return apiKey, nil
+	}
+
 	projectRoot, err := filepath.Abs(filepath.Join(".", ".."))
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve project root:", err)
 	}
 	credentialsPath := filepath.Join(projectRoot, "maps_config.json")
 
-	apiKey, jsonErr := LoadMapsConfig(credentialsPath)
+	apiKeyFromFile, jsonErr := LoadMapsConfig(credentialsPath)
 	if jsonErr != nil {
 		return "", fmt.Errorf("failed to load api key:", err)
 	}
-	return apiKey, nil
+	return apiKeyFromFile, nil
 }
 
 type MapsConfig struct {

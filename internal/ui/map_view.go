@@ -15,6 +15,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/andrew-tawfik/outreach-routing/internal/app"
+	"github.com/andrew-tawfik/outreach-routing/internal/config"
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
@@ -81,17 +82,23 @@ func NewMapView(rp *RoutingProcess, cfg *Config) *MapView {
 }
 
 func (mv *MapView) getApiKey() error {
+	apiKey, err := config.GetEmbeddedMapsAPIKey()
+	if err == nil && apiKey != "" {
+		mv.apiKey = apiKey
+		return nil
+	}
+
 	projectRoot, err := filepath.Abs(filepath.Join(".", ".."))
 	if err != nil {
 		return fmt.Errorf("failed to resolve project root:", err)
 	}
 	credentialsPath := filepath.Join(projectRoot, "maps_config.json")
 
-	apiKey, jsonErr := LoadMapsConfig(credentialsPath)
+	apiKeyFromFile, jsonErr := LoadMapsConfig(credentialsPath)
 	if jsonErr != nil {
 		return fmt.Errorf("failed to load api key:", err)
 	}
-	mv.apiKey = apiKey
+	mv.apiKey = apiKeyFromFile
 	return nil
 }
 

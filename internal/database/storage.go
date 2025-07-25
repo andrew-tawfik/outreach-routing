@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/andrew-tawfik/outreach-routing/internal/config"
 	"golang.org/x/oauth2/google"
 	"gopkg.in/Iwark/spreadsheet.v2"
 )
@@ -19,6 +20,22 @@ type Database struct {
 
 // NewSheetClient initializes a Google Sheets client using credentials
 func NewSheetClient(spreadsheetID string) (*Database, error) {
+	embeddedData := config.GetEmbeddedServiceAccountJSON()
+	if len(embeddedData) > 0 {
+		conf, err := google.JWTConfigFromJSON(embeddedData, spreadsheet.Scope)
+		if err == nil {
+			client := conf.Client(context.Background())
+			service := spreadsheet.NewServiceWithClient(client)
+
+			sheet, err := service.FetchSpreadsheet(spreadsheetID)
+			if err != nil {
+			} else {
+				return &Database{sheet: sheet}, nil
+			}
+		} else {
+			fmt.Printf("Warning: embedded credentials are invalid: %v\n", err)
+		}
+	}
 
 	// Compute path relative to current working dir (cmd/)
 	projectRoot, err := filepath.Abs(filepath.Join(".", ".."))
