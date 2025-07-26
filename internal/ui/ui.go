@@ -30,7 +30,7 @@ func (cfg *Config) MakeUI() {
 
 	runButton := widget.NewButton("Run", func() {
 		var popup *widget.PopUp
-		var result *RoutingProcess
+		var result *RoutingProcess = nil
 		var processErr error
 		if processErr != nil {
 			fmt.Println("placeholder, delete later")

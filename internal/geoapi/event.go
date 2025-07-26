@@ -71,6 +71,8 @@ func (e *Event) filterGuestForService() {
 
 // RequestGuestCoordiantes performs geocoding on all filtered guests
 func (e *Event) RequestGuestCoordiantes() error {
+	ResetGlobalState()
+
 	e.filterGuestForService()
 	e.initCoordinateMap()
 
@@ -124,4 +126,8 @@ func (e *Event) isUnique(guestIndex int) (string, bool) {
 	e.GuestLocations.CoordianteMap.CoordinateToAddress[g.Address] = g.Coordinates
 	e.GuestLocations.CoordianteMap.AddressOrder = append(e.GuestLocations.CoordianteMap.AddressOrder, g.Address)
 	return g.Coordinates.ToString(), true
+}
+
+func ResetGlobalState() {
+	coordListURL = ""
 }
