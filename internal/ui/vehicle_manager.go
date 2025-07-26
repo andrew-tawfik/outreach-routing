@@ -162,7 +162,6 @@ func (vm *VehicleManager) ResetToInitialState() {
 	// Refresh the grid display
 	vm.grid.refreshAfterMove()
 
-	vm.config.InfoLog.Println("Reset to initial state completed - both guests and routes restored")
 }
 
 // updateVehicleRoute updates the route for a specific vehicle based on its current guests
@@ -196,7 +195,6 @@ func (vm *VehicleManager) SubmitChanges() {
 		vm.updateAllVehicleRoutes()
 
 		vm.captureInitialState() // Make current state the new baseline
-		vm.grid.config.InfoLog.Println("Changes submitted successfully")
 	}
 }
 

@@ -49,10 +49,8 @@ func determineEventType(sheet *spreadsheet.Sheet) (string, error) {
 
 	switch {
 	case strings.Contains(title, "Dinner"):
-		fmt.Println("Dinner Event!")
 		return "Dinner", nil
 	case strings.Contains(title, "Grocery"):
-		fmt.Println("Grocery Event!")
 		return "Grocery", nil
 	default:
 		return "", fmt.Errorf("title must include either 'Dinner' or 'Grocery'")

@@ -222,15 +222,6 @@ func (mv *MapView) determineMarkerLabel(vehicle *app.Vehicle, coor *coordinates.
 			break
 		}
 	}
-	if colorIndex == -1 {
-		fmt.Println("This vehicle has no match with (%f, %f): ", coor.Long, coor.Lat)
-		for _, c := range vehicle.Locations {
-
-			fmt.Println("  (%f, %f) ", c.Long, c.Lat)
-
-		}
-	}
-	//fmt.Printf("The color index of vehicle is: %d\n", colorIndex)
 	return fmt.Sprintf("%c", 'A'+colorIndex)
 
 }

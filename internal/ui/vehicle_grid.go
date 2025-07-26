@@ -153,9 +153,6 @@ func (vg *VehicleGrid) StartDrag(guest *app.Guest, origin VehiclePosition, start
 
 	// Don't show the drag visual yet - wait for first mouse move
 	vg.dragOverlay.Hide()
-
-	vg.config.InfoLog.Printf("Started dragging guest: %s from Vehicle %d, Tile %d",
-		guest.Name, origin.VehicleIndex, origin.TileIndex)
 }
 
 // createDragVisual creates the visual representation of the dragged guest
@@ -212,12 +209,9 @@ func (vg *VehicleGrid) EndDrag(globalPos fyne.Position) {
 
 	if vg.isValidDropTarget(targetPos) {
 		vg.performMove(vg.dragOrigin, targetPos)
-		vg.config.InfoLog.Printf("Moved guest %s from Vehicle %d to Vehicle %d",
-			vg.draggedGuest.Name, vg.dragOrigin.VehicleIndex, targetPos.VehicleIndex)
 	} else {
 		// Return guest to original position
 		vg.vehicles[vg.dragOrigin.VehicleIndex].ShowGuest(vg.dragOrigin.TileIndex)
-		vg.config.InfoLog.Printf("Invalid drop for guest: %s", vg.draggedGuest.Name)
 	}
 
 	// Clean up drag state
@@ -230,7 +224,6 @@ func (vg *VehicleGrid) CancelDrag() {
 		// Show the guest back in original position
 		vg.vehicles[vg.dragOrigin.VehicleIndex].ShowGuest(vg.dragOrigin.TileIndex)
 		vg.cleanupDrag()
-		vg.config.InfoLog.Printf("Drag cancelled")
 	}
 }
 
@@ -423,7 +416,6 @@ func (vg *VehicleGrid) refreshAfterMove() {
 func (vg *VehicleGrid) ResetVehicles() {
 	if vg.vehicleManager != nil {
 		vg.vehicleManager.ResetToInitialState()
-		vg.config.InfoLog.Println("Vehicles reset to initial state")
 	}
 }
 
@@ -431,7 +423,6 @@ func (vg *VehicleGrid) ResetVehicles() {
 func (vg *VehicleGrid) SubmitChanges() {
 	if vg.vehicleManager != nil {
 		vg.vehicleManager.SubmitChanges()
-		vg.config.InfoLog.Println("Changes submitted successfully")
 	}
 }
 

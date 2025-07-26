@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"image/color"
 	"math"
 
@@ -32,9 +31,6 @@ func (cfg *Config) MakeUI() {
 		var popup *widget.PopUp
 		var result *RoutingProcess = nil
 		var processErr error
-		if processErr != nil {
-			fmt.Println("placeholder, delete later")
-		}
 
 		// Step 1: Show popup on UI thread
 		fyne.Do(func() {
@@ -57,9 +53,7 @@ func (cfg *Config) MakeUI() {
 
 				// Show result or error
 				if processErr != nil {
-					fmt.Println("The program knows there is an error")
 					fyne.Do(func() {
-						fmt.Println("in the fyne do")
 						ShowErrorNotification(cfg.MainWindow, "Processing Error", processErr.Error())
 					})
 					return
