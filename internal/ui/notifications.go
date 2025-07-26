@@ -10,10 +10,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// ShowInAppNotification shows a notification within the app window
+
 func ShowErrorNotification(window fyne.Window, title, message string) {
-	// Create notification card
-	bgColor := color.NRGBA{R: 200, G: 50, B: 50, A: 230} // Red
+	
+	bgColor := color.NRGBA{R: 200, G: 50, B: 50, A: 230} 
 
 	background := canvas.NewRectangle(bgColor)
 	background.CornerRadius = 4
@@ -25,20 +25,20 @@ func ShowErrorNotification(window fyne.Window, title, message string) {
 	content := container.NewVBox(titleLabel, messageLabel)
 	notification := container.NewStack(background, container.NewPadded(content))
 
-	// Create popup
+	
 	popup := widget.NewPopUp(notification, window.Canvas())
 	popup.Resize(fyne.NewSize(300, 100))
 
-	// Position at top-right
+	
 	windowSize := window.Canvas().Size()
 	popup.Move(fyne.NewPos(windowSize.Width-320, 20))
 
 	popup.Show()
 
-	// Auto-hide after 3 seconds
+	
 	go func() {
 		time.Sleep(10 * time.Second)
-		// Use fyne.Do only for the UI update
+		
 		fyne.Do(func() {
 			popup.Hide()
 		})
@@ -62,7 +62,7 @@ func ShowMessage(window fyne.Window) *widget.PopUp {
 	popup := widget.NewPopUp(notification, window.Canvas())
 	popup.Resize(fyne.NewSize(220, 60))
 
-	// Position top-right
+	
 	windowSize := window.Canvas().Size()
 	popup.Move(fyne.NewPos(windowSize.Width-240, 50))
 
@@ -86,15 +86,15 @@ func ShowSuccess(window fyne.Window) {
 	popup := widget.NewPopUp(notification, window.Canvas())
 	popup.Resize(fyne.NewSize(200, 60))
 
-	// Position top-right
+	
 	windowSize := window.Canvas().Size()
 	popup.Move(fyne.NewPos(windowSize.Width-220, 50))
 	popup.Show()
 
-	// Auto-hide after 3 seconds
+	
 	go func() {
 		time.Sleep(3 * time.Second)
-		// Use fyne.Do only for the UI update
+		
 		fyne.Do(func() {
 			popup.Hide()
 		})

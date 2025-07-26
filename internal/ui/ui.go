@@ -12,7 +12,7 @@ import (
 )
 
 func (cfg *Config) MakeUI() {
-	// ---- Input & Run ----------------------------------------
+	
 
 	var wrapper *mainContentWrapper
 
@@ -23,8 +23,8 @@ func (cfg *Config) MakeUI() {
 	outputEntry.SetText("…your output here…")
 	outputEntry.Wrapping = fyne.TextWrapWord
 
-	var currentGrid *VehicleGrid // Store reference to current grid
-	var tabs *container.AppTabs  // Store reference to tabs
+	var currentGrid *VehicleGrid 
+	var tabs *container.AppTabs  
 	var mapView *MapView
 
 	runButton := widget.NewButton("Run", func() {
@@ -32,26 +32,26 @@ func (cfg *Config) MakeUI() {
 		var result *RoutingProcess = nil
 		var processErr error
 
-		// Step 1: Show popup on UI thread
+		
 		fyne.Do(func() {
 			popup = ShowMessage(cfg.MainWindow)
 			popup.Show()
 		})
 
-		// Step 2: Run background work
+		
 		go func() {
-			// Do the heavy lifting
-			//result, processErr = ProcessJsonEvent(1)
+			
+			
 			result, processErr = ProcessEvent(urlEntry.Text)
 
-			// Step 3: Queue UI updates on main thread (thread-safe)
+			
 			fyne.Do(func() {
-				// Hide the popup
+				
 				if popup != nil {
 					popup.Hide()
 				}
 
-				// Show result or error
+				
 				if processErr != nil {
 					fyne.Do(func() {
 						ShowErrorNotification(cfg.MainWindow, "Processing Error", processErr.Error())
@@ -62,7 +62,7 @@ func (cfg *Config) MakeUI() {
 						ShowSuccess(cfg.MainWindow)
 					})
 				}
-				// Populate the UI
+				
 				cfg.Rp = result
 				outputEntry.SetText(result.String())
 				currentGrid = NewVehicleGrid(result.rm, cfg)
@@ -85,7 +85,7 @@ func (cfg *Config) MakeUI() {
 
 	runButton.Importance = widget.HighImportance
 	spacer := canvas.NewRectangle(color.Transparent)
-	spacer.SetMinSize(fyne.NewSize(500, 1)) // 1px height to keep it invisible
+	spacer.SetMinSize(fyne.NewSize(500, 1)) 
 
 	rButton := container.NewHBox(
 		runButton,
@@ -96,30 +96,30 @@ func (cfg *Config) MakeUI() {
 		container.NewBorder(nil, nil, nil, rButton, urlEntry),
 	))
 
-	// ---- Output & Actions ----------------------------------
+	
 
 	outputScroll := container.NewScroll(outputEntry)
-	// Remove the fixed MinSize to allow it to expand
-	// outputScroll.SetMinSize(fyne.NewSize(350, 300))
+	
+	
 
 	outputSection := widget.NewCard("Guest Dropoff Summary", "", outputScroll)
 
-	// Small spacer at the top only
+	
 	spacer2 := canvas.NewRectangle(color.Transparent)
 	spacer2.SetMinSize(fyne.NewSize(0, 20))
 
-	// Use NewBorder to make output section fill the remaining space
+	
 	homeTab := container.NewBorder(
-		container.NewVBox(spacer2, urlCard), // top - input section
-		nil,                                 // bottom
-		nil,                                 // left
-		nil,                                 // right
-		outputSection,                       // center - this will expand to fill remaining space
+		container.NewVBox(spacer2, urlCard), 
+		nil,                                 
+		nil,                                 
+		nil,                                 
+		outputSection,                       
 	)
 
 	gradient := canvas.NewLinearGradient(
-		color.NRGBA{55, 48, 163, 255}, // Dark purple
-		color.NRGBA{75, 61, 96, 255},  // Dark violet-gray
+		color.NRGBA{55, 48, 163, 255}, 
+		color.NRGBA{75, 61, 96, 255},  
 		math.Pi/4,
 	)
 
@@ -168,13 +168,13 @@ func (cfg *Config) MakeUI() {
 		container.NewPadded(buttonBar),
 	)
 
-	// Create Route Planning tab content
+	
 	routePlanningContent := container.NewBorder(
-		buttonBarContainer, // Action buttons at top
+		buttonBarContainer, 
 		nil,
 		nil,
 		nil,
-		cfg.VehicleSection, // Vehicle grid
+		cfg.VehicleSection, 
 	)
 
 	routePlanningTab := container.NewMax(gradient, routePlanningContent)
@@ -183,31 +183,31 @@ func (cfg *Config) MakeUI() {
 		widget.NewLabel("Run the routing process to see the map visualization"),
 	)
 
-	// Create the tab container
+	
 	tabs = container.NewAppTabs(
 		container.NewTabItem("Home", homeTab),
 		container.NewTabItem("Route Planning", routePlanningTab),
 		container.NewTabItem("Map", mapTabPlaceholder),
 	)
 
-	// Create a wrapper that handles mouse events
+	
 	wrapper = &mainContentWrapper{
 		content: tabs,
-		grid:    nil, // Will be updated when grid is created
+		grid:    nil, 
 	}
 	wrapper.ExtendBaseWidget(wrapper)
 
-	// Store reference to wrapper so we can update the grid reference
+	
 	cfg.MainWindow.SetContent(wrapper)
 
-	// Set up keyboard handling for ESC key
+	
 	cfg.MainWindow.Canvas().SetOnTypedKey(func(key *fyne.KeyEvent) {
 		if key.Name == fyne.KeyEscape && currentGrid != nil && currentGrid.IsDragging() {
 			currentGrid.CancelDrag()
 		}
 	})
 
-	// Update wrapper's grid reference when grid changes
+	
 	originalRunFunc := runButton.OnTapped
 	runButton.OnTapped = func() {
 		originalRunFunc()
@@ -215,7 +215,7 @@ func (cfg *Config) MakeUI() {
 	}
 }
 
-// mainContentWrapper wraps the main content and handles mouse events
+
 type mainContentWrapper struct {
 	widget.BaseWidget
 	content fyne.CanvasObject
@@ -229,7 +229,7 @@ func (w *mainContentWrapper) CreateRenderer() fyne.WidgetRenderer {
 	}
 }
 
-// Implement desktop.Mouseable interface
+
 func (w *mainContentWrapper) MouseIn(*desktop.MouseEvent) {}
 func (w *mainContentWrapper) MouseOut()                   {}
 
@@ -247,7 +247,7 @@ func (w *mainContentWrapper) MouseUp(event *desktop.MouseEvent) {
 	}
 }
 
-// mainContentRenderer is the renderer for the main content wrapper
+
 type mainContentRenderer struct {
 	wrapper *mainContentWrapper
 	objects []fyne.CanvasObject

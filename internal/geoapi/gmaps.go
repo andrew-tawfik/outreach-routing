@@ -19,7 +19,7 @@ func (e *Event) geocodeEvent() {
 		FailedGuests: make([]FailedGuest, 0),
 	}
 
-	// Geocode all guests and track unique coordinates
+	
 	for i := range e.Guests {
 		err := e.Guests[i].geocodeGuestAddress()
 		if err != nil {
@@ -60,7 +60,7 @@ func retreiveGuestLocation(gAddress, apiKey string) (coordinates.GuestCoordinate
 		return coordinates.GuestCoordinates{}, "", err
 	}
 
-	coor, newAddr, err := parseGoogleGeocodeResponse(body) // Match based on city keyword
+	coor, newAddr, err := parseGoogleGeocodeResponse(body) 
 	if err != nil {
 		return coordinates.GuestCoordinates{}, "", err
 	}
@@ -108,20 +108,20 @@ func parseGoogleGeocodeResponse(body []byte) ([]float64, string, error) {
 		return nil, "", fmt.Errorf("could not deserialize response body: %v", err)
 	}
 
-	// Check if the request was successful
+	
 	if response.Status != "OK" {
 		return nil, "", fmt.Errorf("geocoding failed with status: %s", response.Status)
 	}
 
-	// Check if we have results
+	
 	if len(response.Results) == 0 {
 		return nil, "", fmt.Errorf("no geocoding results found")
 	}
 
-	// Get the first (best) result
+	
 	result := response.Results[0]
 
-	// Extract coordinates - Google returns lat, lng but your system expects [lat, lng]
+	
 	coordinates := []float64{
 		result.Geometry.Location.Lng,
 		result.Geometry.Location.Lat,

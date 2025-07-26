@@ -17,16 +17,16 @@ func CoordinateKey(c coordinates.GuestCoordinates) string {
 	return fmt.Sprintf("%.6f,%.6f", c.Long, c.Lat)
 }
 
-// SerializableGuest is a JSON-friendly version of Guest
+
 type SerializableGuest struct {
 	Name        string
 	GroupSize   int
-	Coordinates string // Store as "long,lat" string
+	Coordinates string 
 	Address     string
 	PhoneNumber string
 }
 
-// SerializableEvent is a JSON-friendly version of Event
+
 type SerializableEvent struct {
 	Guests    []SerializableGuest
 	EventType string
@@ -48,7 +48,7 @@ type SerializableAppData struct {
 	LocationRegistry SerializableLocationRegistry
 }
 
-// ConvertEventToSerializable converts an Event to its serializable form
+
 func ConvertEventToSerializable(event Event) SerializableEvent {
 	guests := make([]SerializableGuest, len(event.Guests))
 	for i, g := range event.Guests {
@@ -67,7 +67,7 @@ func ConvertEventToSerializable(event Event) SerializableEvent {
 	}
 }
 
-// ConvertEventFromSerializable converts a SerializableEvent back to Event
+
 func ConvertEventFromSerializable(se SerializableEvent) Event {
 	guests := make([]Guest, len(se.Guests))
 	for i, sg := range se.Guests {

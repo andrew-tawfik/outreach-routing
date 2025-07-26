@@ -13,8 +13,7 @@ import (
 
 var httpClient = &http.Client{Timeout: 30 * time.Second}
 
-// retreiveAddressCoordinate takes a raw address string, sends a geocode request to Nominatim,
-// and returns the best-matched geographic coordinates (longitude, latitude).
+
 func retreiveAddressCoordinate(address string) (coordinates.GuestCoordinates, error) {
 	url := buildGeocodeURL(address)
 
@@ -31,7 +30,6 @@ func retreiveAddressCoordinate(address string) (coordinates.GuestCoordinates, er
 	return coordinates.GuestCoordinates{Long: coor[0], Lat: coor[1]}, nil
 }
 
-// geocodeGuestAddress assigns GPS coordinates to the guest's address
 func (g *Guest) geocodeGuestAddress() error {
 
 	apiKey, err := getApiKey()
@@ -49,13 +47,11 @@ func (g *Guest) geocodeGuestAddress() error {
 	return nil
 }
 
-// buildGeocodeURL creates a Nominatim search URL from a sanitized address.
 func buildGeocodeURL(address string) string {
 	polishAddress(&address)
 	return fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=geojson", address)
 }
 
-// fetchGeocodeData performs an HTTP GET request to the given URL with retry logic.
 func fetchGeocodeData(url string) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -76,8 +72,6 @@ func fetchGeocodeData(url string) ([]byte, error) {
 	return body, nil
 }
 
-// parseGeocodeResponse extracts coordinates from the raw response,
-// filtered by a city keyword (e.g., "Ottawa") to retreive accurate location.
 func parseGeocodeResponse(body []byte, city string) ([]float64, error) {
 	var nr NominatimResponse
 	if err := json.Unmarshal(body, &nr); err != nil {
@@ -91,10 +85,7 @@ func parseGeocodeResponse(body []byte, city string) ([]float64, error) {
 	return coordinates, nil
 }
 
-// polishAddress cleans and formats an address string to make it suitable for OSRM request.
-// - Removes apartment/unit suffixes.
-// - Trims spaces and converts to lowercase.
-// - Replaces spaces with '+' for URL encoding.
+
 func polishAddress(rawAddress *string) {
 	address := strings.ToLower(*rawAddress)
 
@@ -110,9 +101,7 @@ func polishAddress(rawAddress *string) {
 	*rawAddress = address
 }
 
-// sendWithRetry executes an HTTP request with retry logic and returns the response.
 func sendWithRetry(req *http.Request) (*http.Response, error) {
-	// httpClient is a shared HTTP client with timeout, reused for all geocoding requests.
 	const maxAttempts = 3
 
 	for attempts := 0; attempts < maxAttempts; attempts++ {
@@ -125,13 +114,11 @@ func sendWithRetry(req *http.Request) (*http.Response, error) {
 		if resp.StatusCode == http.StatusOK {
 			return resp, nil
 		} else {
-			// Retry after short wait
 			resp.Body.Close()
 			time.Sleep(2 * time.Second)
 			continue
 		}
 
-		// Don't retry on unexpected status
 		resp.Body.Close()
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}

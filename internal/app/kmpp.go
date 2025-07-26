@@ -34,21 +34,21 @@ func (km *Kmeans) GetName() string {
 
 func (km *Kmeans) StartRouteDispatch(rm *RouteManager, lr *LocationRegistry) error {
 
-	// Create k means object
+	
 	km.init(rm)
 	err := km.determineCentroids(rm, lr)
 	if err != nil {
 		return err
 	}
 
-	// perform standard k means
+	
 	km.clusterData()
 	km.determineVehicleRoutes()
-	// km.printDistances()
+	
 
-	// traveling sales person algorithm per cluster
+	
 
-	// vehicles will serve one cluster, update vehicle information
+	
 
 	return nil
 }
@@ -72,12 +72,12 @@ func (km *Kmeans) init(rm *RouteManager) {
 }
 
 func (km *Kmeans) determineCentroids(rm *RouteManager, lr *LocationRegistry) error {
-	km.retreiveUniqueGuestCoordinates(rm, lr) // this is my data
+	km.retreiveUniqueGuestCoordinates(rm, lr) 
 	centroids := make([]*coordinates.GuestCoordinates, 0)
 
 	randomIndex := rand.Intn(len(km.points))
 	km.Clusters[0].centroid = km.points[randomIndex].guestCoordinate
-	centroids = append(centroids, &km.Clusters[0].centroid) // append random element to centroids list
+	centroids = append(centroids, &km.Clusters[0].centroid) 
 
 	for i := 1; i < len(km.Clusters); i++ {
 
@@ -112,13 +112,13 @@ func getProbabilities(distances []float64, divisor float64) []uint {
 	probabilities := make([]uint, len(distances))
 	sum := uint(0)
 
-	// Convert all but the last element
+	
 	for i := 0; i < len(distances)-1; i++ {
 		probabilities[i] = uint((distances[i] / divisor) * 100)
 		sum += probabilities[i]
 	}
 
-	// Make the last element ensure sum equals 100
+	
 	probabilities[len(probabilities)-1] = 100 - sum
 	sum += probabilities[len(probabilities)-1]
 
@@ -189,9 +189,9 @@ func (km *Kmeans) retreiveUniqueGuestCoordinates(rm *RouteManager, lr *LocationR
 }
 
 func (km *Kmeans) clusterData() {
-	maxIterations := 100 // Prevent infinite loops
+	maxIterations := 100 
 
-	// Initialize all points to cluster -1 (unassigned)
+	
 	for i := range km.points {
 		km.points[i].clusterIndex = -1
 	}
@@ -199,12 +199,12 @@ func (km *Kmeans) clusterData() {
 	for iteration := 0; iteration < maxIterations; iteration++ {
 		hasChanged := false
 
-		// Clear existing assignments
+		
 		for i := range km.Clusters {
 			km.Clusters[i].bestThree = make([]*Point, 0, 3)
 		}
 
-		// Assign each point to the closest cluster (with capacity constraint)
+		
 		for i := range km.points {
 			point := &km.points[i]
 			bestClusterIndex, replacePosition := km.findBestClusterForPoint(point)
@@ -213,10 +213,10 @@ func (km *Kmeans) clusterData() {
 				cluster := &km.Clusters[bestClusterIndex]
 
 				if replacePosition != -1 {
-					// Replace the point at the specified position
+					
 					cluster.bestThree[replacePosition] = point
 				} else {
-					// Add to cluster (has space)
+					
 					cluster.bestThree = append(cluster.bestThree, point)
 				}
 
@@ -227,10 +227,10 @@ func (km *Kmeans) clusterData() {
 			}
 		}
 
-		// Recalculate centroids
+		
 		km.recalculateCentroids()
 
-		// If no assignments changed, we've converged
+		
 		if !hasChanged {
 			break
 		}
@@ -242,30 +242,30 @@ func (km *Kmeans) findBestClusterForPoint(point *Point) (int, int) {
 	replacePosition := -1
 	minDistance := math.Inf(1)
 
-	// Try to find the best available cluster
+	
 	for i := range km.Clusters {
 		cluster := &km.Clusters[i]
 		distance := dist(point.guestCoordinate, cluster.centroid)
 
-		// If cluster has space and this is the closest so far
+		
 		if len(cluster.bestThree) < 3 && distance < minDistance {
 			minDistance = distance
 			bestClusterIndex = i
-			replacePosition = -1 // No replacement needed, just append
+			replacePosition = -1 
 		}
 	}
 
-	// If no cluster with space was found, try to replace in existing clusters
+	
 	if bestClusterIndex == -1 {
 		for i := range km.Clusters {
 			cluster := &km.Clusters[i]
 			distance := dist(point.guestCoordinate, cluster.centroid)
 
 			if len(cluster.bestThree) == 3 {
-				// Find the farthest point in this cluster
+				
 				farthestIndex, farthestDistance := km.findFarthestPointInCluster(cluster)
 
-				// If current point is closer than the farthest point in cluster
+				
 				if distance < farthestDistance && distance < minDistance {
 					minDistance = distance
 					bestClusterIndex = i
@@ -278,10 +278,10 @@ func (km *Kmeans) findBestClusterForPoint(point *Point) (int, int) {
 	return bestClusterIndex, replacePosition
 }
 
-// Case 1: Cluster has less than 3. Add the points
-// Case 2: Cluster already has 3.
-// 		2a. If farther than the 3: Skip this Cluster look for the next smallest and available Cluster
-// 		2b. If closer than one of the three, replace the farthest one of the three
+
+
+
+
 
 func (km *Kmeans) findFarthestPointInCluster(cluster *Cluster) (int, float64) {
 	farthestIndex := -1
@@ -303,7 +303,7 @@ func (km *Kmeans) recalculateCentroids() {
 		cluster := &km.Clusters[i]
 
 		if len(cluster.bestThree) == 0 {
-			continue // Keep existing centroid if no points assigned
+			continue 
 		}
 
 		var sumLat, sumLong float64
@@ -312,7 +312,7 @@ func (km *Kmeans) recalculateCentroids() {
 			sumLong += point.guestCoordinate.Long
 		}
 
-		// Update centroid to average of assigned points
+		
 		cluster.centroid.Lat = sumLat / float64(len(cluster.bestThree))
 		cluster.centroid.Long = sumLong / float64(len(cluster.bestThree))
 	}

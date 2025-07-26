@@ -6,18 +6,18 @@ import (
 	"fmt"
 )
 
-//go:embed client_secret.json
+
 var clientSecretJSON []byte
 
-//go:embed maps_config.json
+
 var mapsConfigJSON []byte
 
-// MapsConfig matches your existing JSON structure
+
 type MapsConfig struct {
 	MapsAPIKey string `json:"maps_api_key"`
 }
 
-// GoogleServiceAccount matches the Google service account JSON structure
+
 type GoogleServiceAccount struct {
 	Type                    string `json:"type"`
 	ProjectID               string `json:"project_id"`
@@ -31,7 +31,7 @@ type GoogleServiceAccount struct {
 	ClientX509CertURL       string `json:"client_x509_cert_url"`
 }
 
-// GetEmbeddedMapsAPIKey returns just the API key string (most common use case)
+
 func GetEmbeddedMapsAPIKey() (string, error) {
 	var config MapsConfig
 	err := json.Unmarshal(mapsConfigJSON, &config)
@@ -46,12 +46,12 @@ func GetEmbeddedMapsAPIKey() (string, error) {
 	return config.MapsAPIKey, nil
 }
 
-// GetEmbeddedServiceAccountJSON returns the raw JSON bytes for Google OAuth
+
 func GetEmbeddedServiceAccountJSON() []byte {
 	return clientSecretJSON
 }
 
-// GetEmbeddedServiceAccount returns the parsed service account config
+
 func GetEmbeddedServiceAccount() (*GoogleServiceAccount, error) {
 	var config GoogleServiceAccount
 	err := json.Unmarshal(clientSecretJSON, &config)
@@ -61,7 +61,7 @@ func GetEmbeddedServiceAccount() (*GoogleServiceAccount, error) {
 	return &config, nil
 }
 
-// GetEmbeddedMapsConfig returns the full maps configuration
+
 func GetEmbeddedMapsConfig() (*MapsConfig, error) {
 	var config MapsConfig
 	err := json.Unmarshal(mapsConfigJSON, &config)

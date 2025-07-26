@@ -12,13 +12,13 @@ import (
 	"gopkg.in/Iwark/spreadsheet.v2"
 )
 
-// Database wraps the Google Sheets spreadsheet object
-// and represents your external data source.
+
+
 type Database struct {
 	sheet spreadsheet.Spreadsheet
 }
 
-// NewSheetClient initializes a Google Sheets client using credentials
+
 func NewSheetClient(spreadsheetID string) (*Database, error) {
 	embeddedData := config.GetEmbeddedServiceAccountJSON()
 	if len(embeddedData) > 0 {
@@ -37,7 +37,7 @@ func NewSheetClient(spreadsheetID string) (*Database, error) {
 		}
 	}
 
-	// Compute path relative to current working dir (cmd/)
+	
 	projectRoot, err := filepath.Abs(filepath.Join(".", ".."))
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve project root:", err)
@@ -49,7 +49,7 @@ func NewSheetClient(spreadsheetID string) (*Database, error) {
 		return nil, fmt.Errorf("cannot read %s: %v", credentialsPath, err)
 	}
 
-	// Create a JWT-based authenticated client using the provided credentials
+	
 	conf, err := google.JWTConfigFromJSON(data, spreadsheet.Scope)
 	if err != nil {
 		return nil, fmt.Errorf("cannot config from json")
@@ -65,7 +65,7 @@ func NewSheetClient(spreadsheetID string) (*Database, error) {
 	return &Database{sheet: sheet}, nil
 }
 
-// ExtractIDFromURL parses a standard Google Sheets URL
+
 func ExtractIDFromURL(url string) (string, error) {
 	const marker = "/d/"
 

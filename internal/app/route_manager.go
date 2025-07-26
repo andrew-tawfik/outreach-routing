@@ -6,13 +6,13 @@ import (
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
-// Route holds the doubly-linked list of destination indices assigned to a vehicle.
+
 type Route struct {
 	List             *list.List
 	DestinationCount int
 }
 
-// Vehicle represents a single transport unit with a route and remaining seat capacity.
+
 type Vehicle struct {
 	SeatsRemaining int
 	Route          Route
@@ -20,18 +20,18 @@ type Vehicle struct {
 	Locations      []coordinates.GuestCoordinates
 }
 
-// RouteManager manages the state of all vehicles, routing decisions, and guest assignments.
+
 type RouteManager struct {
-	Vehicles              []Vehicle   // List of available vehicles
-	ServedDestinations    map[int]int // Maps destination index to assigned vehicle index
-	DestinationGuestCount []int       // Number of guests at each destination index
+	Vehicles              []Vehicle   
+	ServedDestinations    map[int]int 
+	DestinationGuestCount []int       
 	CoordinateList        []coordinates.GuestCoordinates
 }
 
-// maxVehicleSeats defines the seat capacity of each vehicle
+
 var maxVehicleSeats int = 4
 
-// addressOrder is a temporary global variable used for displaying purposes
+
 var addressOrder []string
 
 type VRPAlgorithm interface {
@@ -39,15 +39,15 @@ type VRPAlgorithm interface {
 	GetName() string
 }
 
-// CreateRouteManager initializes a RouteManager instance from a LocationRegistry and
-// number of available vehicles. It sets up guest counts, initializes vehicles, and prepares the savings heap.
+
+
 func OrchestateDispatch(lr *LocationRegistry, e *Event) *RouteManager {
 
 	ao := &lr.CoordianteMap.AddressOrder
 	destinationCount := &lr.CoordianteMap.DestinationOccupancy
 	addrMap := &lr.CoordianteMap.CoordinateToAddress
 
-	// Convert address-based guest data to index-based arrays
+	
 	destinationGuestCount := make([]int, len(*ao))
 	servedDestinations := make(map[int]int)
 
@@ -57,7 +57,7 @@ func OrchestateDispatch(lr *LocationRegistry, e *Event) *RouteManager {
 		servedDestinations[i] = -1
 	}
 
-	// Create vehicles and initialize the savings heap
+	
 	vehicles := make([]Vehicle, 0, 10)
 
 	addressOrder = lr.CoordianteMap.AddressOrder

@@ -7,20 +7,17 @@ import (
 	"github.com/andrew-tawfik/outreach-routing/internal/coordinates"
 )
 
-// VehicleManager handles vehicle state management and operations
 type VehicleManager struct {
 	routeManager *app.RouteManager
 	grid         *VehicleGrid
 	config       *Config
 
-	// State tracking - now includes routes
-	initialGuestState    map[int][]app.Guest // Original guest assignments
-	initialRouteState    map[int]app.Route   // Original route assignments
+	initialGuestState    map[int][]app.Guest
+	initialRouteState    map[int]app.Route
 	initialLocationState map[int][]coordinates.GuestCoordinates
 	hasChanges           bool
 }
 
-// NewVehicleManager creates a new vehicle manager
 func NewVehicleManager(rm *app.RouteManager, grid *VehicleGrid, cfg *Config) *VehicleManager {
 	vm := &VehicleManager{
 		routeManager:         rm,
@@ -35,10 +32,9 @@ func NewVehicleManager(rm *app.RouteManager, grid *VehicleGrid, cfg *Config) *Ve
 	return vm
 }
 
-// captureInitialState saves the current vehicle assignments AND routes for reset functionality
 func (vm *VehicleManager) captureInitialState() {
 	for i, vehicle := range vm.routeManager.Vehicles {
-		// Deep copy the guests slice
+
 		guestsCopy := make([]app.Guest, len(vehicle.Guests))
 		copy(guestsCopy, vehicle.Guests)
 		vm.initialGuestState[i] = guestsCopy
@@ -47,13 +43,11 @@ func (vm *VehicleManager) captureInitialState() {
 		copy(locationsCopy, vehicle.Locations)
 		vm.initialLocationState[i] = locationsCopy
 
-		// Deep copy the route - need to copy the linked list
 		routeCopy := app.Route{
 			DestinationCount: vehicle.Route.DestinationCount,
-			List:             nil, // Will be set below
+			List:             nil,
 		}
 
-		// Copy the linked list if it exists
 		if vehicle.Route.List != nil {
 			routeCopy.List = list.New()
 			for elem := vehicle.Route.List.Front(); elem != nil; elem = elem.Next() {
@@ -66,7 +60,6 @@ func (vm *VehicleManager) captureInitialState() {
 	vm.hasChanges = false
 }
 
-// MoveGuest moves a guest from one vehicle to another
 func (vm *VehicleManager) MoveGuest(guest *app.Guest, fromVehicle, toVehicle int) error {
 	rm := vm.config.Rp.rm
 
@@ -78,18 +71,15 @@ func (vm *VehicleManager) MoveGuest(guest *app.Guest, fromVehicle, toVehicle int
 	sourceVehicle := &rm.Vehicles[fromVehicle]
 	targetVehicle := &rm.Vehicles[toVehicle]
 
-	// Check capacity
 	if targetVehicle.SeatsRemaining < guest.GroupSize {
 		return NewVehicleError("insufficient capacity in target vehicle")
 	}
 
-	// Find and remove guest from source
 	guestIndex := vm.findGuestIndex(sourceVehicle, guest)
 	if guestIndex < 0 {
 		return NewVehicleError("guest not found in source vehicle")
 	}
 
-	// Perform the move
 	sourceVehicle.Guests = append(
 		sourceVehicle.Guests[:guestIndex],
 		sourceVehicle.Guests[guestIndex+1:]...,
@@ -99,7 +89,6 @@ func (vm *VehicleManager) MoveGuest(guest *app.Guest, fromVehicle, toVehicle int
 	targetVehicle.Guests = append(targetVehicle.Guests, *guest)
 	targetVehicle.SeatsRemaining -= guest.GroupSize
 
-	// Update routes for both vehicles
 	vm.updateVehicleRoute(fromVehicle)
 	vm.updateVehicleRoute(toVehicle)
 
@@ -107,34 +96,28 @@ func (vm *VehicleManager) MoveGuest(guest *app.Guest, fromVehicle, toVehicle int
 	return nil
 }
 
-// ResetToInitialState restores all vehicles to their original state INCLUDING routes
 func (vm *VehicleManager) ResetToInitialState() {
-	// First restore guest assignments
+
 	for i, originalGuests := range vm.initialGuestState {
 		if i < len(vm.routeManager.Vehicles) {
 			vehicle := &vm.routeManager.Vehicles[i]
 
-			// Restore guest list
 			vehicle.Guests = make([]app.Guest, len(originalGuests))
 			copy(vehicle.Guests, originalGuests)
 
-			// Recalculate seat capacity
-			vehicle.SeatsRemaining = 4 // Reset to max capacity
+			vehicle.SeatsRemaining = 4
 			for _, guest := range vehicle.Guests {
 				vehicle.SeatsRemaining -= guest.GroupSize
 			}
 		}
 	}
 
-	// Then restore route assignments
 	for i, originalRoute := range vm.initialRouteState {
 		if i < len(vm.routeManager.Vehicles) {
 			vehicle := &vm.routeManager.Vehicles[i]
 
-			// Restore route destination count
 			vehicle.Route.DestinationCount = originalRoute.DestinationCount
 
-			// Restore the linked list
 			if originalRoute.List == nil {
 				vehicle.Route.List = nil
 			} else {
@@ -151,7 +134,6 @@ func (vm *VehicleManager) ResetToInitialState() {
 		if i < len(vm.routeManager.Vehicles) {
 			vehicle := &vm.routeManager.Vehicles[i]
 
-			// Restore locations list
 			vehicle.Locations = make([]coordinates.GuestCoordinates, len(originalLocations))
 			copy(vehicle.Locations, originalLocations)
 		}
@@ -159,12 +141,10 @@ func (vm *VehicleManager) ResetToInitialState() {
 
 	vm.hasChanges = false
 
-	// Refresh the grid display
 	vm.grid.refreshAfterMove()
 
 }
 
-// updateVehicleRoute updates the route for a specific vehicle based on its current guests
 func (vm *VehicleManager) updateVehicleRoute(vehicleIndex int) {
 	if vehicleIndex < 0 || vehicleIndex >= len(vm.routeManager.Vehicles) {
 		return
@@ -174,11 +154,10 @@ func (vm *VehicleManager) updateVehicleRoute(vehicleIndex int) {
 	lr := vm.config.Rp.lr
 
 	eventType := vm.config.Rp.ae.EventType
-	// Use the existing UpdateRouteFromGuests method
+
 	vehicle.UpdateRouteFromGuests(lr, eventType)
 }
 
-// updateAllVehicleRoutes updates routes for all vehicles
 func (vm *VehicleManager) updateAllVehicleRoutes() {
 	lr := vm.config.Rp.lr
 	eventType := vm.config.Rp.ae.EventType
@@ -188,29 +167,26 @@ func (vm *VehicleManager) updateAllVehicleRoutes() {
 	}
 }
 
-// SubmitChanges applies the current state as the new baseline
 func (vm *VehicleManager) SubmitChanges() {
 	if vm.hasChanges {
-		// Make sure all routes are up to date before capturing state
+
 		vm.updateAllVehicleRoutes()
 
-		vm.captureInitialState() // Make current state the new baseline
+		vm.captureInitialState()
 	}
 }
 
-// HasChanges returns whether there are unsaved changes
 func (vm *VehicleManager) HasChanges() bool {
 	return vm.hasChanges
 }
 
-// GetVehicleCapacityInfo returns capacity information for a vehicle
 func (vm *VehicleManager) GetVehicleCapacityInfo(vehicleIndex int) VehicleCapacity {
 	if vehicleIndex < 0 || vehicleIndex >= len(vm.routeManager.Vehicles) {
 		return VehicleCapacity{}
 	}
 
 	vehicle := &vm.routeManager.Vehicles[vehicleIndex]
-	used := 4 - vehicle.SeatsRemaining // Assuming max 4 seats
+	used := 4 - vehicle.SeatsRemaining
 
 	return VehicleCapacity{
 		MaxSeats:       4,
@@ -220,7 +196,6 @@ func (vm *VehicleManager) GetVehicleCapacityInfo(vehicleIndex int) VehicleCapaci
 	}
 }
 
-// GetAllVehicleInfo returns summary information for all vehicles
 func (vm *VehicleManager) GetAllVehicleInfo() []VehicleInfo {
 	info := make([]VehicleInfo, len(vm.routeManager.Vehicles))
 
@@ -236,7 +211,6 @@ func (vm *VehicleManager) GetAllVehicleInfo() []VehicleInfo {
 	return info
 }
 
-// ValidateMove checks if a move is valid without executing it
 func (vm *VehicleManager) ValidateMove(guest *app.Guest, fromVehicle, toVehicle int) error {
 	if fromVehicle < 0 || fromVehicle >= len(vm.routeManager.Vehicles) ||
 		toVehicle < 0 || toVehicle >= len(vm.routeManager.Vehicles) {
@@ -250,12 +224,10 @@ func (vm *VehicleManager) ValidateMove(guest *app.Guest, fromVehicle, toVehicle 
 	sourceVehicle := &vm.routeManager.Vehicles[fromVehicle]
 	targetVehicle := &vm.routeManager.Vehicles[toVehicle]
 
-	// Check if guest exists in source vehicle
 	if vm.findGuestIndex(sourceVehicle, guest) < 0 {
 		return NewVehicleError("guest not found in source vehicle")
 	}
 
-	// Check target capacity
 	if targetVehicle.SeatsRemaining < guest.GroupSize {
 		return NewVehicleError("insufficient capacity in target vehicle")
 	}
@@ -263,7 +235,6 @@ func (vm *VehicleManager) ValidateMove(guest *app.Guest, fromVehicle, toVehicle 
 	return nil
 }
 
-// findGuestIndex finds the index of a guest in a vehicle's guest list
 func (vm *VehicleManager) findGuestIndex(vehicle *app.Vehicle, guest *app.Guest) int {
 	for i, g := range vehicle.Guests {
 		if g.Name == guest.Name && g.Address == guest.Address {
@@ -273,9 +244,6 @@ func (vm *VehicleManager) findGuestIndex(vehicle *app.Vehicle, guest *app.Guest)
 	return -1
 }
 
-// Supporting types
-
-// VehicleCapacity holds capacity information for a vehicle
 type VehicleCapacity struct {
 	MaxSeats       int
 	UsedSeats      int
@@ -283,14 +251,12 @@ type VehicleCapacity struct {
 	GuestCount     int
 }
 
-// VehicleInfo holds summary information for a vehicle
 type VehicleInfo struct {
 	Index    int
 	Capacity VehicleCapacity
 	Guests   []app.Guest
 }
 
-// VehicleError represents errors related to vehicle operations
 type VehicleError struct {
 	message string
 }

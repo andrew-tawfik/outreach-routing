@@ -1,7 +1,7 @@
 package ui
 
 import (
-	//"fmt"
+	
 
 	"fmt"
 	"log"
@@ -19,41 +19,41 @@ type RoutingProcess struct {
 
 func ProcessEvent(googleSheetURL string) (*RoutingProcess, error) {
 
-	// Extract the spreadsheet ID from the provided URL
+	
 	spreadsheetID, err := database.ExtractIDFromURL(googleSheetURL)
 
 	if err != nil {
 		return nil, fmt.Errorf("error extracting ID: %v", err)
 	}
 
-	// Initialize Google Sheets client
+	
 	db, err := database.NewSheetClient(spreadsheetID)
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize sheet client: %v", err)
 	}
 
-	// Parse event and guest data from the sheet
+	
 	event, err := db.ProcessEvent()
 	if err != nil {
 		return nil, fmt.Errorf("could not process event: %v", err)
 	}
 
-	// Map database event to geo event structure for coordinate lookup
+	
 	geoEvent := converter.MapDatabaseEventToHttp(event)
 
-	// Request GPS coordinates for all guest addresses
+	
 	err = geoEvent.RequestGuestCoordiantes()
 	if err != nil {
 		return nil, fmt.Errorf("could not geocode addresses: %w", err)
 	}
 
-	// Request distance matrix for all coordinates
+	
 	err = geoEvent.RetreiveDistanceMatrix()
 	if err != nil {
 		return nil, fmt.Errorf("could not retreive distance matrix: %w", err)
 	}
 
-	// Map geo-level data to app-level event and location registry
+	
 	appEvent, lr := converter.MapDatabaseGeoEventToApp(geoEvent)
 
 	err = app.SaveAppDataToFile("data.json", *appEvent, *lr)

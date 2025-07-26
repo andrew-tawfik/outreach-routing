@@ -6,10 +6,10 @@ import (
 	"gopkg.in/Iwark/spreadsheet.v2"
 )
 
-// GuestStatus represents the RSVP or participation status of a guest.
+
 type GuestStatus int
 
-// Defined guest statuses based on spreadsheet cell content.
+
 const (
 	Pending GuestStatus = iota
 	Confirmed
@@ -19,16 +19,16 @@ const (
 	Undecided
 )
 
-// Guest holds the structured information extracted from a spreadsheet row.
+
 type Guest struct {
-	Status      GuestStatus // Enum of guest participation
+	Status      GuestStatus 
 	Name        string
-	GroupSize   int // Number of people in this guest's group
+	GroupSize   int 
 	PhoneNumber string
 	Address     string
 }
 
-// processGuest converts a single row into a Guest struct.
+
 func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 	status := determineGuestStatus((*row)[0].Value)
 	name := (*row)[1].Value
@@ -40,13 +40,13 @@ func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 	if count == "" {
 		count = "0"
 	}
-	// Convert group size to integer and ensure it's > 0
+	
 	iCount, err := strconv.Atoi(count)
 	if err != nil {
 		validGuest = false
 	}
 
-	// Guests must have both a name and address
+	
 	if name == "" || address == "" {
 		validGuest = false
 	}
@@ -64,7 +64,7 @@ func processGuest(row *[]spreadsheet.Cell) (Guest, bool) {
 	}, validGuest
 }
 
-// determineGuestStatus maps a spreadsheet status string to a GuestStatus enum.
+
 func determineGuestStatus(cellContent string) GuestStatus {
 	switch cellContent {
 	case "Confirmed":
