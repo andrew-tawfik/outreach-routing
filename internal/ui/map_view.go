@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -167,7 +168,7 @@ func (mv *MapView) createLegend() *fyne.Container {
 	legendItems := container.NewVBox(legendTitle, widget.NewSeparator())
 
 	// Add depot marker
-	depotRow := mv.createLegendRow("brown", "Depot", "555 Parkdale Ave")
+	depotRow := mv.createLegendRow("brown", "Depot", "555 Parkdale Ave", nil)
 	legendItems.Add(depotRow)
 	legendItems.Add(widget.NewSeparator())
 
@@ -196,7 +197,8 @@ func (mv *MapView) createLegend() *fyne.Container {
 				coor := mv.routingProcess.lr.CoordianteMap.CoordinateToAddress[addr]
 				markerLabel := mv.determineMarkerLabel(&vehicle, &coor)
 
-				row := mv.createLegendRow(vehicleColor, markerLabel, addr)
+				guestInfo := mv.getGuestInfoForAddress(addr, &vehicle)
+				row := mv.createLegendRow(vehicleColor, markerLabel, addr, guestInfo)
 				legendItems.Add(row)
 			}
 
@@ -233,8 +235,22 @@ func (mv *MapView) determineMarkerLabel(vehicle *app.Vehicle, coor *coordinates.
 
 }
 
+func (mv *MapView) getGuestInfoForAddress(address string, vehicle *app.Vehicle) []string {
+	var names []string
+	for _, guest := range vehicle.Guests {
+		if guest.Address == address {
+			guestName := guest.Name
+			if len(guestName) > 25 {
+				guestName = guestName[:22] + "..."
+			}
+			names = append(names, guestName)
+		}
+	}
+	return names
+}
+
 // createLegendRow creates a single row in the legend
-func (mv *MapView) createLegendRow(colorName, label, address string) *fyne.Container {
+func (mv *MapView) createLegendRow(colorName, label, address string, guestInfo []string) *fyne.Container {
 	// Create color indicator
 	markerColor := mv.colorMap[colorName]
 	colorBox := canvas.NewRectangle(markerColor)
@@ -252,12 +268,29 @@ func (mv *MapView) createLegendRow(colorName, label, address string) *fyne.Conta
 	if len(displayAddress) > 30 {
 		displayAddress = displayAddress[:27] + "..."
 	}
-	addressLabel := widget.NewLabel(displayAddress)
+
+	// Create the content based on whether we have guest info
+	var contentLabel *widget.Label
+	if len(guestInfo) == 0 {
+		// No guests - just show address
+		contentLabel = widget.NewLabel(displayAddress)
+	} else {
+		var content strings.Builder
+		content.WriteString(displayAddress)
+
+		for _, guest := range guestInfo {
+			content.WriteString("\n → ")
+			content.WriteString(guest)
+		}
+		contentLabel = widget.NewLabel(content.String())
+	}
+
+	contentLabel.TextStyle.Monospace = true // Monospace font for proper alignment
 
 	return container.NewHBox(
 		colorBox,
 		markerLabel,
-		addressLabel,
+		contentLabel,
 	)
 }
 
