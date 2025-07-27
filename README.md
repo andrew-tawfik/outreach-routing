@@ -1,52 +1,84 @@
 # Outreach Routing Planner
 
-## Project Description
-This project is a Go-based Go-based desktop application designed to support Anba Abraam Service in planning efficient transportation routes for delivering groceries and transporting guests from dinner events to their homes. Built with Fyne UI framework, the application provides an intuitive drag-and-drop interface for coordinators to manage route dispatching with real-time visualization and interactive guest management.
-
-The application integrates with Google Sheets for guest and event data, leverages external services like Google Maps API for geocoding and OSRM for calculating travel distances, and provides interactive map visualization for route planning.
 
 
-At its core, the tool solves the Vehicle Routing Problem (VRP) using different optimization algorithms based on event type: Clarke-Wright Savings Algorithm for dinner events focused on optimal distance-based routing, and K-means++ clustering for grocery runs optimized for efficient geographic distribution. The GUI allows coordinators to review and manually adjust the automatically generated routes through an intuitive drag-and-drop interface.
+A Go desktop application that optimizes transportation routes for community service operations through intelligent algorithms and intuitive visual management. This application serves to aid the transportation coordination for Anba Abraam Service, automating complex route planning that previously required hours of manual coordination.
 
----
+Anba Abraam Service is a community outreach organization that provides essential services to families and individuals in need throughout the Ottawa area. The service operates two primary programs: weekly dinner events where guests are transported from the St Mary & St Mark Church to their homes, and grocery delivery services that distribute food packages directly to families' residences. With dozens of guests spread across the city and limited volunteer drivers, efficient route planning is needed to ensuring timely service delivery while minimizing travel time. 
+
+
+### Core Technologies
+- **Language**: Go 1.24+ with modern concurrency patterns
+- **GUI Framework**: Fyne v2.6 for cross-platform native desktop experience
+- **External APIs**: Google Maps (geocoding), OSRM (routing), Google Sheets (data source)
+
+### Algorithm Implementation
+- **Clarke-Wright Savings Algorithm**: Distance-based optimization for dinner events
+- **K-means++ Clustering**: Geographic distribution optimization for grocery delivery routes
+
+
+
+### Key Engineering Features
+- **Custom Drag-and-Drop System**: Visual feedback with collision detection and capacity validation
+- **State Management**: Full undo/redo capability with snapshot-based preservation
+- **Concurrent Processing**: Non-blocking UI with goroutine-based background operations
+- **Robust API Integration**: Error handling and retry logic for external services
+
+
+## Project Structure
+
+```
+/cmd/                   → Application entry point
+/internal/
+  ├── app/             → Core domain logic (VRP algorithms, route management)
+  ├── ui/              → Fyne GUI components (primary adapters)
+  ├── database/        → Google Sheets integration (secondary adapter)
+  ├── geoapi/          → External API clients (secondary adapters)
+  ├── converter/       → Data transformation layer
+  ├── coordinates/     → Geographic utilities
+  └── config/          → Configuration management
+```
 
 ## Key Features
 
-- Interactive GUI Interface: Fyne-based application with drag-and-drop guest management between vehicles
-- Real-time Map Visualization: Interactive Google Maps display showing vehicle routes and destinations
-- State Management: Save, reset, and submit route changes with full undo capability
-- Routes are displayed as vehicles and their assigned Guests
-- Multi-tab Workflow: Organized interface with Home, Route Planning, and Map visualization tabs
-- Reads and filters structured guest data from a Google Sheet
----
-
-## Project Structure
-```
-/cmd/             → GUI application entry point using Fyne framework
-/internal/
-  ├── app/        → Core domain logic: routing algorithms, optimization, data models
-  ├── converter/  → Data transformation between application layers
-  ├── coordinates/→ Geographic coordinate handling and utilities
-  ├── database/   → Google Sheets integration and data parsing
-  ├── geoapi/     → Geocoding (Google Maps) and routing (OSRM) API integration
-  └── ui/         → Fyne-based GUI components and user interaction 
-```
+### Intelligent Routing
+- Dual algorithm strategy that automatically selects optimal approach based on event type
+- Address validation with Ottawa-specific geocoding
+- Pre-computed distance matrices using real road network data
 
 
-## Input Format
+### Interactive Interface
+- Multi-tab workflow: Home → Route Planning → Map Visualization
+- Drag-and-drop guest assignment between vehicles with visual feedback
+- Real-time map visualization with Google Maps integration
+- State management with save/reset/submit capabilities
 
-### Headers
-Google Sheet must have the following column headers:
+### Data Integration
+- Direct Google Sheets import with structured data validation
+- Automatic address geocoding and coordinate conversion
+
+## Input Data Format
+
+### Required Headers
 ```
 Status | Name | Group Size | Number | Address
 ```
-### Address Formatting Guidelines
-To ensure accurate geocoding and routing:
 
-- All guest addresses must be valid Ottawa addresses.
+### Address Guidelines
+- All addresses must be valid Ottawa, ON locations
+- Please keep addresses !
+- Example: `96 George Street`
+- Avoid extra notes in address field
 
-- Only "unit" or "apt" are allowed as suffixes to the address. These are stripped automatically during processing.
+### Status Values
+- `Confirmed`: Requires transportation
+- `Grocery Only`: Grocery delivery only
+- `Pending`: Awaiting confirmation
+- `NO`: Not requiring service
 
-  - Example of acceptable input: 96 George St apt 54
 
-- Avoid extra text or notes in the address field, as this can lead to geocoding failures.
+![Google Sheets Integration](img/sheets-integration.png)
+![Application Screenshot](img/main-interface.png)
+![Route Planning Interface](img/route-planning.png)
+![Map Visualization](img/map-view.png)
+
