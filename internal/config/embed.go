@@ -6,17 +6,15 @@ import (
 	"fmt"
 )
 
-
+//go:embed client_secret.json
 var clientSecretJSON []byte
 
-
+//go:embed maps_config.json
 var mapsConfigJSON []byte
-
 
 type MapsConfig struct {
 	MapsAPIKey string `json:"maps_api_key"`
 }
-
 
 type GoogleServiceAccount struct {
 	Type                    string `json:"type"`
@@ -30,7 +28,6 @@ type GoogleServiceAccount struct {
 	AuthProviderX509CertURL string `json:"auth_provider_x509_cert_url"`
 	ClientX509CertURL       string `json:"client_x509_cert_url"`
 }
-
 
 func GetEmbeddedMapsAPIKey() (string, error) {
 	var config MapsConfig
@@ -46,11 +43,9 @@ func GetEmbeddedMapsAPIKey() (string, error) {
 	return config.MapsAPIKey, nil
 }
 
-
 func GetEmbeddedServiceAccountJSON() []byte {
 	return clientSecretJSON
 }
-
 
 func GetEmbeddedServiceAccount() (*GoogleServiceAccount, error) {
 	var config GoogleServiceAccount
@@ -60,7 +55,6 @@ func GetEmbeddedServiceAccount() (*GoogleServiceAccount, error) {
 	}
 	return &config, nil
 }
-
 
 func GetEmbeddedMapsConfig() (*MapsConfig, error) {
 	var config MapsConfig
