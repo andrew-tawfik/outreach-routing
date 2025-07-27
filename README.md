@@ -4,13 +4,13 @@
 
 A Go desktop application that optimizes transportation routes for community service operations through intelligent algorithms and intuitive visual management. This application serves to aid the transportation coordination for Anba Abraam Service, automating complex route planning that previously required hours of manual coordination.
 
-Anba Abraam Service is a community outreach organization that provides essential services to families and individuals in need throughout the Ottawa area. The service operates two primary programs: weekly dinner events where guests are transported from the St Mary & St Mark Church to their homes, and grocery delivery services that distribute food packages directly to families' residences. With dozens of guests spread across the city and limited volunteer drivers, efficient route planning is needed to ensuring timely service delivery while minimizing travel time. 
+Anba Abraam Service is a homeless outreach service run by St Mary and St Mark Coptic Orthodox Church that provides essential services to families and individuals in need throughout the Ottawa area. Among their many community programs, the service operates two key transportation-dependent initiatives: weekly dinner events where guests are transported from the church to their homes after the event, and grocery delivery services that distribute food packages directly to families' residences. With dozens of guests spread across the city and limited volunteer drivers, efficient route planning is needed to ensure timely service delivery while minimizing travel time. The manual coordination process previously involved spreadsheet management and time-consuming route calculations taking hours of coordinator time. This application eliminates this, allowing coordinators to redirect their valuable time toward direct service to the community.
 
 
 ### Core Technologies
-- **Language**: Go 1.24+ with modern concurrency patterns
-- **GUI Framework**: Fyne v2.6 for cross-platform native desktop experience
-- **External APIs**: Google Maps (geocoding), OSRM (routing), Google Sheets (data source)
+- **Language**: Go 1.24+
+- **GUI Framework**: Fyne v2.6 for cross-platform native desktop development
+- **External APIs**: Google Maps (geocoding), OSRM (routing), Google Sheets (database)
 
 ### Algorithm Implementation
 - **Clarke-Wright Savings Algorithm**: Distance-based optimization for dinner events
@@ -21,7 +21,6 @@ Anba Abraam Service is a community outreach organization that provides essential
 ### Key Engineering Features
 - **Custom Drag-and-Drop System**: Visual feedback with collision detection and capacity validation
 - **State Management**: Full undo/redo capability with snapshot-based preservation
-- **Concurrent Processing**: Non-blocking UI with goroutine-based background operations
 - **Robust API Integration**: Error handling and retry logic for external services
 
 
@@ -51,7 +50,7 @@ Anba Abraam Service is a community outreach organization that provides essential
 - Multi-tab workflow: Home → Route Planning → Map Visualization
 - Drag-and-drop guest assignment between vehicles with visual feedback
 - Real-time map visualization with Google Maps integration
-- State management with save/reset/submit capabilities
+- State management with reset/submit capabilities
 
 ### Data Integration
 - Direct Google Sheets import with structured data validation
