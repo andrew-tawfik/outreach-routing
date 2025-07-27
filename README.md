@@ -8,9 +8,9 @@ Anba Abraam Service is a community outreach organization that provides essential
 
 
 ### Core Technologies
-- **Language**: Go 1.24+ with modern concurrency patterns
-- **GUI Framework**: Fyne v2.6 for cross-platform native desktop experience
-- **External APIs**: Google Maps (geocoding), OSRM (routing), Google Sheets (data source)
+- **Language**: Go 1.24+
+- **GUI Framework**: Fyne v2.6 for cross-platform native desktop development
+- **External APIs**: Google Maps (geocoding), OSRM (routing), Google Sheets (database)
 
 ### Algorithm Implementation
 - **Clarke-Wright Savings Algorithm**: Distance-based optimization for dinner events
@@ -21,7 +21,6 @@ Anba Abraam Service is a community outreach organization that provides essential
 ### Key Engineering Features
 - **Custom Drag-and-Drop System**: Visual feedback with collision detection and capacity validation
 - **State Management**: Full undo/redo capability with snapshot-based preservation
-- **Concurrent Processing**: Non-blocking UI with goroutine-based background operations
 - **Robust API Integration**: Error handling and retry logic for external services
 
 
@@ -51,7 +50,7 @@ Anba Abraam Service is a community outreach organization that provides essential
 - Multi-tab workflow: Home → Route Planning → Map Visualization
 - Drag-and-drop guest assignment between vehicles with visual feedback
 - Real-time map visualization with Google Maps integration
-- State management with save/reset/submit capabilities
+- State management with reset/submit capabilities
 
 ### Data Integration
 - Direct Google Sheets import with structured data validation
