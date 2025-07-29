@@ -7,11 +7,13 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"github.com/andrew-tawfik/outreach-routing/internal/ui"
 )
 
 func main() {
 	a := app.New()
+	a.Settings().SetTheme(theme.DarkTheme())
 	cfg := &ui.Config{
 		App:        a,
 		InfoLog:    log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
